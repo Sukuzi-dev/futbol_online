@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Owner - Futbol Online</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; min-height: 100vh; display: flex; }
+        .main-wrapper { flex: 1; margin-left: 0; min-height: 100vh; }
+        .content { padding: 30px; max-width: 1600px; margin: 0 auto; }
+        
+        .owner-header { margin-bottom: 30px; }
+        .owner-badge { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(255,215,0,0.3); }
+        .owner-header h1 { font-size: 32px; font-weight: 700; background: linear-gradient(135deg, #ffd700, #ff8c00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; }
+        .owner-header p { color: #888; font-size: 16px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .stat-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 15px; transition: all 0.3s; }
+        .stat-card:hover { border-color: rgba(255,215,0,0.3); transform: translateY(-2px); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .stat-icon.users { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .stat-icon.streams { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .stat-icon.banned { background: linear-gradient(135deg, #fa709a, #fee140); }
+        .stat-icon.online { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .stat-info h3 { font-size: 28px; font-weight: 700; }
+        .stat-info p { font-size: 12px; color: #888; }
+        
+        .owner-sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 25px; }
+        .owner-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 25px; transition: all 0.3s; }
+        .owner-card:hover { border-color: rgba(255,215,0,0.2); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .card-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .card-title i { color: #ffd700; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; color: #ccc; font-size: 13px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: white; font-size: 13px; font-family: 'Poppins', sans-serif; transition: all 0.3s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #ffd700; background: rgba(255,255,255,0.12); }
+        .form-group select option { background: #1a1a2e; color: white; }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        
+        .search-box { display: flex; gap: 8px; margin-bottom: 10px; }
+        .search-box input { flex: 1; padding: 10px 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: white; font-size: 13px; font-family: 'Poppins', sans-serif; }
+        .search-box input:focus { outline: none; border-color: #ffd700; }
+        .filter-row { display: flex; gap: 8px; margin-bottom: 15px; }
+        .filter-row select { flex: 1; padding: 8px 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: white; font-size: 12px; font-family: 'Poppins', sans-serif; }
+        .filter-row select option { background: #1a1a2e; color: white; }
+        
+        .btn { padding: 10px 18px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-family: 'Poppins', sans-serif; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-gold { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; }
+        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,215,0,0.4); }
+        .btn-danger { background: linear-gradient(135deg, #ea4335, #c62828); color: white; }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(234,67,53,0.4); }
+        .btn-success { background: linear-gradient(135deg, #34a853, #1b5e20); color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 11px; border-radius: 6px; border: none; cursor: pointer; transition: all 0.3s; font-family: 'Poppins', sans-serif; display: inline-flex; align-items: center; gap: 4px; color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-row { display: flex; gap: 8px; }
+        
+        .users-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .users-table th { text-align: left; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #888; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        .users-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .users-table tr:hover td { background: rgba(255,255,255,0.02); }
+        .user-avatar-mini { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1px solid #667eea; }
+        .role-badge { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+        .role-owner { background: #ffd700; color: #000; }
+        .role-admin { background: #ea4335; color: white; }
+        .role-user { background: #4a90e2; color: white; }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .status-online { background: #34a853; box-shadow: 0 0 6px rgba(52,168,83,0.5); }
+        .status-offline { background: #666; }
+        
+        .ip-item { background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 8px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; font-family: 'Courier New', monospace; font-size: 13px; }
+        .ban-item { background: rgba(255,255,255,0.03); padding: 10px 14px; border-radius: 8px; margin-bottom: 6px; border-left: 3px solid #ea4335; font-size: 12px; }
+        
+        .empty-state { text-align: center; padding: 30px; color: #888; }
+        .empty-state i { font-size: 40px; margin-bottom: 10px; opacity: 0.3; display: block; }
+        .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        @media (max-width: 1024px) { .owner-sections { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .content { padding: 20px 15px; } .owner-header h1 { font-size: 24px; } .users-table { font-size: 11px; } .users-table th, .users-table td { padding: 8px 6px; } }
+    </style>
+</head>
+<body>
+    <%- include('partials/sidebar') %>
+    <div class="main-wrapper">
+        <%- include('partials/header', { pageTitle: 'Panel Owner' }) %>
+        <div class="content">
+            <div class="owner-header">
+                <div class="owner-badge"><i class="fas fa-crown"></i> Propietario</div>
+                <h1>Panel de Control Total</h1>
+                <p>Gestión completa de la plataforma Futbol Online</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-icon users"><i class="fas fa-users"></i></div><div class="stat-info"><h3 id="totalUsers">0</h3><p>Usuarios Totales</p></div></div>
+                <div class="stat-card"><div class="stat-icon streams"><i class="fas fa-broadcast-tower"></i></div><div class="stat-info"><h3 id="totalStreams">0</h3><p>Streams Activos</p></div></div>
+                <div class="stat-card"><div class="stat-icon banned"><i class="fas fa-ban"></i></div><div class="stat-info"><h3 id="bannedUsers">0</h3><p>Baneados</p></div></div>
+                <div class="stat-card"><div class="stat-icon online"><i class="fas fa-circle"></i></div><div class="stat-info"><h3 id="onlineUsers">0</h3><p>En Línea</p></div></div>
+            </div>
+            
+            <div class="owner-sections">
+                <!-- TABLA DE USUARIOS -->
+                <div class="owner-card" style="grid-column: 1 / -1;">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-users"></i> Todos los Usuarios Registrados</div><button class="btn btn-gold btn-sm" onclick="cargarUsuarios()"><i class="fas fa-sync-alt"></i> Actualizar</button></div>
+                    <div class="search-box">
+                        <input type="text" id="userSearch" placeholder="Buscar por nombre o email..." onkeyup="debounceSearch()">
+                        <button class="btn btn-gold" onclick="cargarUsuarios()"><i class="fas fa-search"></i> Buscar</button>
+                    </div>
+                    <div class="filter-row">
+                        <select id="roleFilter" onchange="cargarUsuarios()"><option value="all">Todos los roles</option><option value="user">Usuario</option><option value="admin">Admin</option><option value="owner">Owner</option></select>
+                        <select id="bannedFilter" onchange="cargarUsuarios()"><option value="all">Todos</option><option value="false">No baneados</option><option value="true">Baneados</option></select>
+                        <select id="sortFilter" onchange="cargarUsuarios()"><option value="newest">Más recientes</option><option value="oldest">Más antiguos</option><option value="username">Por nombre</option><option value="active">Última actividad</option></select>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="users-table">
+                            <thead><tr><th>Usuario</th><th>Email</th><th>Rol</th><th>Estado</th><th>Creado</th><th>Última Conexión</th><th>Acciones</th></tr></thead>
+                            <tbody id="usersTableBody"><tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">Cargando usuarios...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- GESTIONAR ROLES -->
+                <div class="owner-card">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-user-shield"></i> Gestionar Roles</div></div>
+                    <div style="background:rgba(255,215,0,0.05); border:1px solid rgba(255,215,0,0.15); border-radius:10px; padding:12px; margin-bottom:15px; font-size:12px; color:#ffd700;"><i class="fas fa-info-circle"></i> Jerarquía: Owner > Admin > Usuario</div>
+                    <div class="form-group"><label>Nombre de Usuario</label><input type="text" id="roleUsername" maxlength="10" placeholder="Usuario a modificar..."></div>
+                    <div class="form-group"><label>Nuevo Rol</label><select id="newRole"><option value="">Seleccionar rol...</option><option value="user">👤 Usuario</option><option value="admin">🛡️ Administrador</option><option value="owner">👑 Owner</option></select></div>
+                    <div class="btn-row">
+                        <button class="btn btn-gold" onclick="cambiarRol()" style="flex:1;"><i class="fas fa-exchange-alt"></i> Cambiar Rol</button>
+                        <button class="btn btn-danger" onclick="degradarAUsuario()" style="flex:1;"><i class="fas fa-level-down-alt"></i> Degradar</button>
+                    </div>
+                </div>
+                
+                <!-- BLACKLIST IPs -->
+                <div class="owner-card">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-shield-alt"></i> Blacklist de IPs</div><button class="btn btn-gold btn-sm" onclick="cargarIPs()"><i class="fas fa-sync-alt"></i> Actualizar</button></div>
+                    <div class="form-group"><label>Agregar IP a Blacklist</label><div style="display:flex; gap:8px;"><input type="text" id="ipAddress" placeholder="Ej: 192.168.1.1" style="flex:1;"><button class="btn btn-gold" onclick="agregarIP()"><i class="fas fa-plus"></i> Bloquear</button></div></div>
+                    <div class="form-group"><label>Razón del bloqueo</label><input type="text" id="ipReason" placeholder="Motivo del bloqueo..."></div>
+                    <div id="ipBlacklist" style="max-height:300px; overflow-y:auto;"><div class="empty-state"><i class="fas fa-shield-alt"></i><p>Cargando IPs bloqueadas...</p></div></div>
+                </div>
+                
+                <!-- BROADCAST -->
+                <div class="owner-card">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-bullhorn"></i> Mensaje Broadcast</div></div>
+                    <div class="form-group"><label>Mensaje para TODOS los usuarios</label><textarea id="broadcastMessage" maxlength="500" placeholder="Escribe el mensaje..."></textarea><span style="font-size:11px; color:#888;" id="broadcastCount">0/500</span></div>
+                    <button class="btn btn-gold" onclick="enviarBroadcast()" style="width:100%;"><i class="fas fa-paper-plane"></i> Enviar Broadcast</button>
+                </div>
+                
+                <!-- HISTORIAL DE BANEOS -->
+                <div class="owner-card">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-history"></i> Historial de Baneos</div><button class="btn btn-gold btn-sm" onclick="cargarHistorial()"><i class="fas fa-sync-alt"></i> Actualizar</button></div>
+                    <div id="banHistoryList"><div class="empty-state"><i class="fas fa-history"></i><p>Cargando...</p></div></div>
+                </div>
+                
+                <!-- LIMPIEZA -->
+                <div class="owner-card">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-broom"></i> Mantenimiento</div></div>
+                    <button class="btn btn-danger" onclick="limpiarSistema()" style="width:100%;"><i class="fas fa-broom"></i> Ejecutar Limpieza General</button>
+                    <p style="color:#888; font-size:11px; text-align:center; margin-top:10px;">Elimina bans expirados, streams finalizados y cuentas inactivas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL DE CONFIRMACIÓN -->
+    <div id="confirmModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:#1a1a2e; border:1px solid rgba(255,215,0,0.3); border-radius:20px; padding:30px; max-width:450px; width:90%; text-align:center; animation:modalIn 0.3s ease; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+            <div style="font-size:50px; margin-bottom:15px; color:#fbbc04;"><i class="fas fa-exclamation-triangle"></i></div>
+            <h3 style="font-size:20px; margin-bottom:10px; color:white;" id="confirmTitle">Confirmar Acción</h3>
+            <p style="color:#aaa; font-size:14px; margin-bottom:25px; line-height:1.5; white-space:pre-line;" id="confirmMessage"></p>
+            <div style="display:flex; gap:10px;" id="confirmBtns">
+                <button onclick="cerrarConfirmModal()" style="flex:1; padding:12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:10px; color:white; cursor:pointer; font-family:'Poppins',sans-serif; font-size:14px;">Cancelar</button>
+                <button id="confirmOkBtn" style="flex:1; padding:12px; background:linear-gradient(135deg, #ffd700, #ff8c00); border:none; border-radius:10px; color:#000; cursor:pointer; font-weight:600; font-family:'Poppins',sans-serif; font-size:14px;">Confirmar</button>
+            </div>
+            <div id="confirmLoading" style="display:none; padding:20px;"><span class="loading-spinner"></span> Procesando...</div>
+        </div>
+    </div>
+    
+    <!-- MODAL DE RESULTADO -->
+    <div id="resultModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); z-index:10001; align-items:center; justify-content:center;">
+        <div style="background:#1a1a2e; border-radius:20px; padding:30px; max-width:450px; width:90%; text-align:center; animation:modalIn 0.3s ease; box-shadow:0 20px 60px rgba(0,0,0,0.5);" id="resultBox">
+            <div style="font-size:60px; margin-bottom:15px;" id="resultIcon"></div>
+            <h3 style="font-size:20px; margin-bottom:10px; color:white;" id="resultTitle"></h3>
+            <p style="color:#aaa; font-size:14px; margin-bottom:25px;" id="resultMessage"></p>
+            <button onclick="cerrarResultModal()" style="padding:12px 30px; background:linear-gradient(135deg, #ffd700, #ff8c00); border:none; border-radius:10px; color:#000; cursor:pointer; font-weight:600; font-family:'Poppins',sans-serif; font-size:14px;">Aceptar</button>
+        </div>
+    </div>
+    
+    <style>@keyframes modalIn { from { opacity:0; transform:scale(0.9) translateY(-20px); } to { opacity:1; transform:scale(1) translateY(0); } }</style>
+    
+    <script>
+        let searchTimeout, confirmCallback = null;
+        
+        // ============ MODALES ============
+        function mostrarConfirmacion(titulo, mensaje, callback) {
+            document.getElementById('confirmTitle').textContent = titulo;
+            document.getElementById('confirmMessage').textContent = mensaje;
+            document.getElementById('confirmBtns').style.display = 'flex';
+            document.getElementById('confirmLoading').style.display = 'none';
+            document.getElementById('confirmModal').style.display = 'flex';
+            confirmCallback = callback;
+        }
+        function cerrarConfirmModal() { document.getElementById('confirmModal').style.display = 'none'; confirmCallback = null; }
+        
+        document.getElementById('confirmOkBtn').addEventListener('click', async function() {
+            document.getElementById('confirmBtns').style.display = 'none';
+            document.getElementById('confirmLoading').style.display = 'block';
+            try { if (confirmCallback) await confirmCallback(); } catch(e) {}
+            cerrarConfirmModal();
+        });
+        
+        function mostrarResultado(exito, titulo, mensaje) {
+            const box = document.getElementById('resultBox');
+            document.getElementById('resultIcon').innerHTML = exito ? '<i class="fas fa-check-circle" style="color:#34a853;"></i>' : '<i class="fas fa-times-circle" style="color:#ea4335;"></i>';
+            document.getElementById('resultTitle').textContent = titulo;
+            document.getElementById('resultMessage').textContent = mensaje;
+            box.style.border = exito ? '1px solid rgba(52,168,83,0.3)' : '1px solid rgba(234,67,53,0.3)';
+            document.getElementById('resultModal').style.display = 'flex';
+        }
+        function cerrarResultModal() { document.getElementById('resultModal').style.display = 'none'; }
+        
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { cerrarConfirmModal(); cerrarResultModal(); } });
+        document.getElementById('confirmModal').addEventListener('click', function(e) { if (e.target === this) cerrarConfirmModal(); });
+        document.getElementById('resultModal').addEventListener('click', function(e) { if (e.target === this) cerrarResultModal(); });
+        
+        // ============ CARGAR USUARIOS ============
+        async function cargarUsuarios() {
+            document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;"><span class="loading-spinner"></span> Cargando...</td></tr>';
+            const query = document.getElementById('userSearch').value;
+            const role = document.getElementById('roleFilter').value;
+            const banned = document.getElementById('bannedFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+            try {
+                const params = new URLSearchParams({ query, role, banned, sort });
+                const res = await fetch('/owner/search-users?' + params);
+                const data = await res.json();
+                if (data.users && data.users.length > 0) {
+                    document.getElementById('usersTableBody').innerHTML = data.users.map(u => 
+                        '<tr><td><div style="display:flex;align-items:center;gap:8px;"><img src="/uploads/avatars/' + (u.avatar || 'default.png') + '" class="user-avatar-mini" onerror="this.src=\'/uploads/avatars/default.png\'"><span>' + esc(u.username) + '</span></div></td>' +
+                        '<td style="font-size:12px;color:#aaa;">' + esc(u.email) + '</td>' +
+                        '<td><span class="role-badge role-' + u.role + '">' + u.role + '</span></td>' +
+                        '<td><span class="status-dot ' + (new Date(u.last_activity) > new Date(Date.now() - 300000) ? 'status-online' : 'status-offline') + '"></span>' + (u.banned ? '<span style="color:#ea4335;font-size:11px;">Baneado</span>' : 'Activo') + '</td>' +
+                        '<td style="font-size:11px;color:#888;">' + new Date(u.created_at).toLocaleDateString('es-ES') + '</td>' +
+                        '<td style="font-size:11px;color:#888;">' + new Date(u.last_activity).toLocaleString('es-ES') + '</td>' +
+                        '<td><div style="display:flex;gap:4px;"><button class="btn-sm btn-gold" onclick="ascenderRapido(\'' + u.username + '\',\'admin\')" title="Ascender" ' + (u.role==='owner'?'disabled':'') + '><i class="fas fa-arrow-up"></i></button><button class="btn-sm btn-success" onclick="degradarRapido(\'' + u.username + '\')" title="Degradar" ' + (u.role==='user'?'disabled':'') + '><i class="fas fa-arrow-down"></i></button><button class="btn-sm btn-danger" onclick="eliminarUsuario(\'' + u.id + '\',\'' + u.username + '\')" title="Eliminar" ' + (u.id=='<%= user.id %>'?'disabled':'') + '><i class="fas fa-trash"></i></button></div></td></tr>'
+                    ).join('');
+                } else {
+                    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">No se encontraron usuarios</td></tr>';
+                }
+            } catch(e) { document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:#ea4335;">Error al cargar</td></tr>'; }
+        }
+        function debounceSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(cargarUsuarios, 500); }
+        
+        // ============ ROLES ============
+        async function cambiarRol() {
+            const username = document.getElementById('roleUsername').value.trim();
+            const newRole = document.getElementById('newRole').value;
+            if (!username || !newRole) { mostrarResultado(false, 'Error', 'Completa todos los campos'); return; }
+            if (newRole === 'owner') {
+                mostrarConfirmacion('⚠️ Ascender a Owner', '¿ASCENDER a "' + username + '" a OWNER?\n\nTendrá acceso TOTAL al sistema.', async () => { await ejecutarCambioRol(username, newRole); });
+            } else {
+                mostrarConfirmacion('Cambiar Rol', '¿Cambiar el rol de "' + username + '" a ' + newRole.toUpperCase() + '?', async () => { await ejecutarCambioRol(username, newRole); });
+            }
+        }
+        async function ejecutarCambioRol(username, newRole) {
+            try {
+                const res = await fetch('/owner/change-role', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, newRole }) });
+                const data = await res.json();
+                if (data.success) { document.getElementById('roleUsername').value = ''; document.getElementById('newRole').value = ''; cargarUsuarios(); mostrarResultado(true, '✅ Rol Actualizado', data.message); }
+                else mostrarResultado(false, '❌ Error', data.message);
+            } catch(e) { mostrarResultado(false, '❌ Error', 'Error de conexión'); }
+        }
+        async function degradarAUsuario() {
+            const username = document.getElementById('roleUsername').value.trim();
+            if (!username) { mostrarResultado(false, 'Error', 'Ingresa un usuario'); return; }
+            mostrarConfirmacion('⬇️ Degradar a Usuario', '¿DEGRADAR a "' + username + '" a Usuario?\n\nPerderá todos sus privilegios.', async () => { await ejecutarCambioRol(username, 'user'); });
+        }
+        async function ascenderRapido(username, role) {
+            mostrarConfirmacion('⬆️ Ascender', '¿Ascender a "' + username + '" a ' + role.toUpperCase() + '?', async () => {
+                try {
+                    const res = await fetch('/owner/change-role', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, newRole: role }) });
+                    const data = await res.json();
+                    if (data.success) { cargarUsuarios(); mostrarResultado(true, '✅ Ascendido', data.message); }
+                    else mostrarResultado(false, '❌ Error', data.message);
+                } catch(e) { mostrarResultado(false, '❌ Error', 'Error de conexión'); }
+            });
+        }
+        async function degradarRapido(username) {
+            mostrarConfirmacion('⬇️ Degradar', '¿Degradar a "' + username + '" a Usuario?', async () => {
+                try {
+                    const res = await fetch('/owner/change-role', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, newRole: 'user' }) });
+                    const data = await res.json();
+                    if (data.success) { cargarUsuarios(); mostrarResultado(true, '✅ Degradado', data.message); }
+                    else mostrarResultado(false, '❌ Error', data.message);
+                } catch(e) { mostrarResultado(false, '❌ Error', 'Error de conexión'); }
+            });
+        }
+        
+        // ============ ELIMINAR USUARIO ============
+        function eliminarUsuario(id, username) {
+            mostrarConfirmacion('🗑️ Eliminar Usuario', '¿ELIMINAR permanentemente a "' + username + '"?\n\nEsta acción NO se puede deshacer.', async () => {
+                try {
+                    const res = await fetch('/owner/delete-user/' + id, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (data.success) { cargarUsuarios(); mostrarResultado(true, '✅ Usuario Eliminado', data.message); }
+                    else mostrarResultado(false, '❌ Error', data.message);
+                } catch(e) { mostrarResultado(false, '❌ Error', 'Error de conexión'); }
+            });
+        }
+        
+        // ============ BLACKLIST IPs ============
+        async function cargarIPs() {
+            const container = document.getElementById('ipBlacklist');
+            container.innerHTML = '<div class="empty-state"><span class="loading-spinner"></span> Cargando...</div>';
+            try {
+                const res = await fetch('/owner/blacklist-ips');
+                const data = await res.json();
+                if (data.ips && data.ips.length > 0) {
+                    container.innerHTML = data.ips.map(ip => 
+                        '<div class="ip-item"><div><strong style="color:#ffd700;">' + esc(ip.ip_address) + '</strong><br><small style="color:#888;">' + (ip.reason || 'Sin razón') + '</small><br><small style="color:#666;font-size:10px;">Bloqueada: ' + new Date(ip.created_at).toLocaleDateString('es-ES') + '</small></div><button class="btn btn-danger btn-sm" onclick="removerIP(' + ip.id + ')" style="flex-shrink:0;"><i class="fas fa-times"></i> Eliminar</button></div>'
+                    ).join('');
+                } else {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-shield-alt"></i><p>No hay IPs bloqueadas</p></div>';
+                }
+            } catch(e) { container.innerHTML = '<div class="empty-state" style="color:#ea4335;"><i class="fas fa-exclamation-triangle"></i><p>Error al cargar</p></div>'; }
+        }
+        
+        async function agregarIP() {
+            const ip = document.getElementById('ipAddress').value.trim();
+            const reason = document.getElementById('ipReason').value.trim();
+            if (!ip) { mostrarResultado(false, 'Error', 'Ingresa una dirección IP'); return; }
+            const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+            if (!ipRegex.test(ip)) { mostrarResultado(false, 'Error', 'Formato de IP inválido'); return; }
+            mostrarConfirmacion('🚫 Bloquear IP', '¿Bloquear la IP "' + ip + '"?\n\nRazón: ' + (reason || 'No especificada'), async () => {
+                try {
+                    const res = await fetch('/owner/blacklist-ip', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip_address: ip, reason }) });
+                    const data = await res.json();
+                    if (data.success) { document.getElementById('ipAddress').value = ''; document.getElementById('ipReason').value = ''; cargarIPs(); mostrarResultado(true, '✅ IP Bloqueada', data.message); }
+                    else mostrarResultado(false, '❌ Error', data.message);
+                } catch(e) { mostrarResultado(false, '❌ Error', 'Error de conexión'); }
+            });
+        }
+        
+        async function removerIP(id) {
+            mostrarConfirmacion('🔓 Desbloquear IP', '¿Eliminar esta IP de la blacklist?', async () => {
+                try {
+                    const res = await fetch('/owner/blacklist-ip/' + id, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (data.success) { cargarIPs(); mostrarResultado(true, '✅ IP Eliminada', data.message); }
+                    else mostrarResultado(false, '❌ Error', data.message);
+                } catch(e) { mostrarResultado(false, '❌ Error', 'Error de conexión'); }
+            });
+        }
+        
+        // ============ BROADCAST ============
+        document.getElementById('broadcastMessage').addEventListener('input', function() { document.getElementById('broadcastCount').textContent = this.value.length + '/500'; });
+        async function enviarBroadcast() {
+            const msg = document.getElementById('broadcastMessage').value.trim();
+            if (!msg) { mostrarResultado(false, 'Error', 'Escribe un mensaje'); return; }
+            mostrarConfirmacion('📢 Enviar Broadcast', '¿Enviar mensaje a TODOS los usuarios?\n\n"' + msg.substring(0, 60) + (msg.length > 60 ? '...' : '') + '"', async () => {
+                try {
+                    const res = await fetch('/owner/broadcast', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg }) });
+                    const data = await res.json();
+                    if (data.success) { document.getElementById('broadcastMessage').value = ''; document.getElementById('broadcastCount').textContent = '0/500'; mostrarResultado(true, '✅ Broadcast Enviado', data.message); }
+                    else mostrarResultado(false, '❌ Error', data.message);
+                } catch(e) { mostrarResultado(false, '❌ Error', 'Error de conexión'); }
+            });
+        }
+        
+        // ============ HISTORIAL ============
+        async function cargarHistorial() {
+            document.getElementById('banHistoryList').innerHTML = '<div class="empty-state"><span class="loading-spinner"></span> Cargando...</div>';
+            try {
+                const res = await fetch('/owner/ban-reasons');
+                const data = await res.json();
+                if (data.bans && data.bans.length > 0) {
+                    document.getElementById('banHistoryList').innerHTML = data.bans.slice(0, 30).map(b =>
+                        '<div class="ban-item"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><strong style="color:#ea4335;">' + esc(b.banned_username) + '</strong><span style="font-size:11px;color:#888;">' + new Date(b.created_at).toLocaleDateString('es-ES') + '</span></div><div style="font-size:12px;color:#ccc;">' + (b.reason || 'Sin razón') + '</div><div style="font-size:11px;color:#666;margin-top:4px;">Tipo: ' + b.ban_type + ' | Por: ' + b.mod_username + '</div></div>'
+                    ).join('');
+                } else {
+                    document.getElementById('banHistoryList').innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>No hay baneos registrados</p></div>';
+                }
+            } catch(e) { document.getElementById('banHistoryList').innerHTML = '<div class="empty-state" style="color:#ea4335;">Error al cargar</div>'; }
+        }
+        
+        // ============ LIMPIEZA ============
+        function limpiarSistema() {
+            mostrarConfirmacion('🧹 Limpieza del Sistema', '¿Ejecutar limpieza general?\n\nSe eliminarán:\n• Bans expirados\n• Streams finalizados\n• Sesiones inactivas\n• Cuentas baneadas inactivas (30 días)', async () => {
+                try {
+                    const res = await fetch('/owner/cleanup-bans', { method: 'POST' });
+                    const data = await res.json();
+                    if (data.success) mostrarResultado(true, '✅ Limpieza Completada', data.message);
+                    else mostrarResultado(false, '❌ Error', data.message);
+                } catch(e) { mostrarResultado(false, '❌ Error', 'Error de conexión'); }
+            });
+        }
+        
+        function esc(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        
+        // ============ INICIAR ============
+        cargarUsuarios();
+        cargarIPs();
+        cargarHistorial();
+    </script>
+</body>
+</html>

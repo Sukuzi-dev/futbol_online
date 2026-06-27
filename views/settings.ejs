@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración - Futbol Online</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        .main-wrapper {
+            flex: 1;
+            margin-left: 0;
+            transition: margin-left 0.3s;
+            min-height: 100vh;
+        }
+        
+        .content {
+            padding: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .settings-header {
+            margin-bottom: 30px;
+        }
+        
+        .settings-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+        
+        .settings-header p {
+            color: #888;
+            font-size: 16px;
+        }
+        
+        .settings-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            transition: all 0.3s;
+        }
+        
+        .settings-card:hover {
+            border-color: rgba(255,255,255,0.15);
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .card-title i {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .avatar-preview {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 3px solid #667eea;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+        
+        .avatar-preview:hover {
+            transform: scale(1.05);
+            border-color: #764ba2;
+            box-shadow: 0 8px 25px rgba(102,126,234,0.3);
+        }
+        
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s;
+            font-size: 30px;
+        }
+        
+        .avatar-preview:hover .avatar-overlay {
+            opacity: 1;
+        }
+        
+        .avatar-info h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        .avatar-info p {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255,255,255,0.12);
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        
+        .form-group input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .input-hint {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .info-box {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .info-box i {
+            color: #fbbc04;
+            font-size: 18px;
+        }
+        
+        .info-box strong {
+            color: #fff;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102,126,234,0.4);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .message {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.success {
+            background: rgba(52,168,83,0.1);
+            border: 1px solid #34a853;
+            color: #34a853;
+        }
+        
+        .message.error {
+            background: rgba(234,67,53,0.1);
+            border: 1px solid #ea4335;
+            color: #ea4335;
+        }
+        
+        .message.show {
+            display: flex;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 1024px) {
+            .main-wrapper {
+                margin-left: 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .settings-header h1 {
+                font-size: 24px;
+            }
+            
+            .avatar-section {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .avatar-info {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/sidebar') %>
+    
+    <div class="main-wrapper">
+        <%- include('partials/header', { pageTitle: 'Configuración' }) %>
+        
+        <div class="content">
+            <div class="settings-header">
+                <h1>⚙️ Configuración de la Cuenta</h1>
+                <p>Personaliza tu perfil y ajusta tus preferencias</p>
+            </div>
+            
+            <!-- Avatar -->
+            <div class="settings-card">
+                <div class="card-title">
+                    <i class="fas fa-camera"></i>
+                    Foto de Perfil
+                </div>
+                
+                <div class="avatar-section">
+                    <div class="avatar-preview" onclick="document.getElementById('avatarInput').click()">
+                        <img id="avatarPreview" src="/uploads/avatars/<%= user.avatar || 'default.png' %>" alt="Avatar" onerror="this.src='/uploads/avatars/default.png'">
+                        <div class="avatar-overlay">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="avatar-info">
+                        <h3>Avatar Personalizado</h3>
+                        <p>Formatos permitidos: JPG, PNG, GIF, WebP<br>Tamaño máximo: 5MB</p>
+                        <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;" onchange="uploadAvatar()">
+                        <button class="btn btn-primary" onclick="document.getElementById('avatarInput').click()">
+                            <i class="fas fa-upload"></i> Subir Nueva Foto
+                        </button>
+                    </div>
+                </div>
+                <div class="message" id="avatarMessage"></div>
+            </div>
+            
+            <!-- Nombre de Usuario -->
+            <div class="settings-card">
+                <div class="card-title">
+                    <i class="fas fa-user"></i>
+                    Nombre de Usuario
+                </div>
+                
+                <div class="form-group">
+                    <label>Nombre de Usuario (3-10 caracteres)</label>
+                    <input type="text" id="usernameInput" value="<%= user.username %>" maxlength="10">
+                    <span class="input-hint" id="charCount"><%= user.username ? user.username.length : 0 %>/10 caracteres</span>
+                </div>
+                
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    Cambios de nombre restantes este año: <strong id="changesLeft"><%= 3 - (user.name_changes || 0) %></strong>
+                </div>
+                
+                <button class="btn btn-primary" onclick="updateUsername()" id="usernameBtn">
+                    <i class="fas fa-save"></i> Guardar Nombre
+                </button>
+                <div class="message" id="usernameMessage"></div>
+            </div>
+            
+            <!-- Email -->
+            <div class="settings-card">
+                <div class="card-title">
+                    <i class="fas fa-envelope"></i>
+                    Correo Electrónico
+                </div>
+                
+                <div class="form-group">
+                    <label>Dirección de Email</label>
+                    <input type="email" id="emailInput" value="<%= user.email %>">
+                </div>
+                
+                <button class="btn btn-primary" onclick="updateEmail()" id="emailBtn">
+                    <i class="fas fa-save"></i> Actualizar Email
+                </button>
+                <div class="message" id="emailMessage"></div>
+            </div>
+            
+            <!-- Contraseña -->
+            <div class="settings-card">
+                <div class="card-title">
+                    <i class="fas fa-lock"></i>
+                    Cambiar Contraseña
+                </div>
+                
+                <div class="form-group">
+                    <label>Contraseña Actual</label>
+                    <input type="password" id="currentPassword" placeholder="••••••••">
+                </div>
+                
+                <div class="form-group">
+                    <label>Nueva Contraseña (mín. 8 caracteres)</label>
+                    <input type="password" id="newPassword" placeholder="••••••••" minlength="8">
+                    <span class="input-hint">Debe contener mayúsculas, minúsculas y números</span>
+                </div>
+                
+                <div class="form-group">
+                    <label>Confirmar Nueva Contraseña</label>
+                    <input type="password" id="confirmPassword" placeholder="••••••••">
+                </div>
+                
+                <button class="btn btn-primary" onclick="updatePassword()" id="passwordBtn">
+                    <i class="fas fa-key"></i> Cambiar Contraseña
+                </button>
+                <div class="message" id="passwordMessage"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ============ CONTADOR DE CARACTERES ============
+        const usernameInput = document.getElementById('usernameInput');
+        const charCount = document.getElementById('charCount');
+        
+        usernameInput.addEventListener('input', function() {
+            charCount.textContent = `${this.value.length}/10 caracteres`;
+        });
+        
+        // ============ AVATAR ============
+        async function uploadAvatar() {
+            const fileInput = document.getElementById('avatarInput');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            // Validar tamaño
+            if (file.size > 5 * 1024 * 1024) {
+                showMessage('avatar', false, 'El archivo no debe superar los 5MB');
+                return;
+            }
+            
+            // Validar tipo
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!allowedTypes.includes(file.type)) {
+                showMessage('avatar', false, 'Formato no permitido. Usa JPG, PNG, GIF o WebP');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('avatar', file);
+            
+            try {
+                const response = await fetch('/settings/avatar', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                showMessage('avatar', data.success, data.message);
+                
+                if (data.success) {
+                    document.getElementById('avatarPreview').src = '/uploads/avatars/' + data.avatar + '?t=' + Date.now();
+                    // Actualizar avatares en sidebar y header
+                    updateAllAvatars(data.avatar);
+                }
+            } catch (error) {
+                showMessage('avatar', false, 'Error al subir la imagen');
+            }
+            
+            fileInput.value = '';
+        }
+        
+        function updateAllAvatars(avatar) {
+            const avatars = document.querySelectorAll('.sidebar-avatar, .user-avatar-header');
+            avatars.forEach(img => {
+                img.src = '/uploads/avatars/' + avatar + '?t=' + Date.now();
+            });
+        }
+        
+        // ============ NOMBRE DE USUARIO ============
+        async function updateUsername() {
+            const username = usernameInput.value.trim();
+            
+            if (!username || username.length < 3) {
+                showMessage('username', false, 'El nombre debe tener al menos 3 caracteres');
+                return;
+            }
+            
+            if (username.length > 10) {
+                showMessage('username', false, 'El nombre no puede exceder 10 caracteres');
+                return;
+            }
+            
+            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                showMessage('username', false, 'Solo se permiten letras, números y guiones bajos');
+                return;
+            }
+            
+            const btn = document.getElementById('usernameBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Guardando...';
+            
+            try {
+                const response = await fetch('/settings/username', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+                
+                const data = await response.json();
+                showMessage('username', data.success, data.message);
+                
+                if (data.success) {
+                    document.getElementById('changesLeft').textContent = data.changesLeft || 0;
+                    // Actualizar nombre en sidebar y header
+                    updateAllUsernames(username);
+                }
+            } catch (error) {
+                showMessage('username', false, 'Error al actualizar');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Guardar Nombre';
+            }
+        }
+        
+        function updateAllUsernames(username) {
+            const nameElements = document.querySelectorAll('.sidebar-user-info h4, .user-menu span');
+            nameElements.forEach(el => {
+                if (el.textContent.length <= 10) el.textContent = username;
+            });
+        }
+        
+        // ============ EMAIL ============
+        async function updateEmail() {
+            const email = document.getElementById('emailInput').value.trim();
+            
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showMessage('email', false, 'Ingresa un email válido');
+                return;
+            }
+            
+            const btn = document.getElementById('emailBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Actualizando...';
+            
+            try {
+                const response = await fetch('/settings/email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                showMessage('email', data.success, data.message);
+            } catch (error) {
+                showMessage('email', false, 'Error al actualizar');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Actualizar Email';
+            }
+        }
+        
+        // ============ CONTRASEÑA ============
+        async function updatePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showMessage('password', false, 'Todos los campos son requeridos');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showMessage('password', false, 'La contraseña debe tener al menos 8 caracteres');
+                return;
+            }
+            
+            if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
+                showMessage('password', false, 'Debe contener mayúsculas, minúsculas y números');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                showMessage('password', false, 'Las contraseñas no coinciden');
+                return;
+            }
+            
+            const btn = document.getElementById('passwordBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Cambiando...';
+            
+            try {
+                const response = await fetch('/settings/password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                
+                const data = await response.json();
+                showMessage('password', data.success, data.message);
+                
+                if (data.success) {
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                }
+            } catch (error) {
+                showMessage('password', false, 'Error al cambiar contraseña');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-key"></i> Cambiar Contraseña';
+            }
+        }
+        
+        // ============ MOSTRAR MENSAJES ============
+        function showMessage(section, success, message) {
+            const msgEl = document.getElementById(section + 'Message');
+            if (msgEl) {
+                const icon = success ? '✅' : '❌';
+                msgEl.innerHTML = `<i class="fas ${success ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+                msgEl.className = 'message ' + (success ? 'success' : 'error') + ' show';
+                
+                setTimeout(() => {
+                    msgEl.classList.remove('show');
+                }, 4000);
+            }
+        }
+    </script>
+</body>
+</html>

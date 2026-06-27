@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Futbol Online</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .error-container {
+            text-align: center;
+            max-width: 600px;
+            animation: slideUp 0.5s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .error-code {
+            font-size: 120px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 20px;
+        }
+        .error-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .error-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .error-message {
+            font-size: 18px;
+            color: #aaa;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .btn-home {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 14px;
+        }
+        .btn-home:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <%
+    var code = typeof statusCode !== 'undefined' ? statusCode : 500;
+    var msg = typeof message !== 'undefined' ? message : 'Ha ocurrido un error inesperado';
+    %>
+    
+    <div class="error-container">
+        <div class="error-icon">
+            <% if (code == 404) { %>
+                <i class="fas fa-search" style="color: #fbbc04;"></i>
+            <% } else if (code == 403) { %>
+                <i class="fas fa-lock" style="color: #ea4335;"></i>
+            <% } else if (code == 401) { %>
+                <i class="fas fa-key" style="color: #fbbc04;"></i>
+            <% } else { %>
+                <i class="fas fa-exclamation-triangle" style="color: #ea4335;"></i>
+            <% } %>
+        </div>
+        <div class="error-code"><%= code %></div>
+        <h1 class="error-title">
+            <% if (code == 404) { %>Página no encontrada
+            <% } else if (code == 403) { %>Acceso denegado
+            <% } else if (code == 401) { %>No autorizado
+            <% } else { %>Error del servidor<% } %>
+        </h1>
+        <p class="error-message"><%= msg %></p>
+        <a href="/dashboard" class="btn-home"><i class="fas fa-home"></i> Volver al inicio</a>
+    </div>
+</body>
+</html>

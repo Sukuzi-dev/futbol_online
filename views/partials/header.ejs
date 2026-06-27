@@ -1,0 +1,264 @@
+<style>
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 25px;
+        background: rgba(26, 26, 46, 0.95);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }
+    
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .hamburger-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        cursor: pointer;
+        color: white;
+        transition: all 0.3s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 10px;
+        flex-shrink: 0;
+    }
+    
+    .hamburger-btn:hover {
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.2);
+    }
+    
+    .hamburger-line {
+        width: 20px;
+        height: 2px;
+        background: white;
+        border-radius: 2px;
+        transition: all 0.3s;
+    }
+    
+    .header-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: white;
+    }
+    
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .notification-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        cursor: pointer;
+        color: white;
+        font-size: 18px;
+        transition: all 0.3s;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .notification-btn:hover {
+        background: rgba(255,255,255,0.1);
+    }
+    
+    .notification-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        background: #ea4335;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 11px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        border: 2px solid #1a1a2e;
+    }
+    
+    .user-menu {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        padding: 6px 16px 6px 6px;
+        border-radius: 25px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.3s;
+        text-decoration: none;
+        color: white;
+    }
+    
+    .user-menu:hover {
+        background: rgba(255,255,255,0.1);
+    }
+    
+    .user-avatar-header {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 2px solid #667eea;
+        object-fit: cover;
+    }
+    
+    @media (max-width: 768px) {
+        .header {
+            padding: 10px 15px;
+        }
+        .header-title {
+            font-size: 16px;
+        }
+        .user-menu span {
+            display: none;
+        }
+    }
+</style>
+
+<header class="header">
+    <div class="header-left">
+        <!-- BOTÓN HAMBURGUESA -->
+        <button class="hamburger-btn" onclick="openSidebar()" aria-label="Abrir menú" title="Menú">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+        
+        <span class="header-title"><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Futbol Online' %></span>
+    </div>
+    
+    <div class="header-right">
+        <!-- Notificaciones -->
+        <div style="position: relative;">
+            <button class="notification-btn" onclick="toggleNotifications()" title="Notificaciones">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge" id="notifBadge">0</span>
+            </button>
+            <div id="notifDropdown" style="display:none; position:absolute; top:55px; right:0; width:350px; max-height:450px; background:#1a1a2e; border:1px solid rgba(255,255,255,0.1); border-radius:16px; box-shadow:0 20px 50px rgba(0,0,0,0.5); z-index:1000; overflow:hidden;">
+                <div style="padding:15px 20px; border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
+                    <h4 style="margin:0; font-size:14px;">Notificaciones</h4>
+                    <button onclick="markAllRead()" style="background:none; border:none; color:#667eea; cursor:pointer; font-size:12px; font-family:'Poppins',sans-serif;">Marcar todo</button>
+                </div>
+                <div id="notifList" style="max-height:350px; overflow-y:auto;">
+                    <div style="text-align:center; padding:40px; color:#888;">Cargando...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Usuario -->
+        <a href="/settings" class="user-menu">
+            <img src="/uploads/avatars/<%= user ? user.avatar || 'default.png' : 'default.png' %>" 
+                 alt="Avatar" 
+                 class="user-avatar-header"
+                 onerror="this.src='/uploads/avatars/default.png'">
+            <span><%= user ? user.username : 'Usuario' %></span>
+        </a>
+    </div>
+</header>
+
+<script>
+    var notifOpen = false;
+    
+    function toggleNotifications() {
+        notifOpen = !notifOpen;
+        var dropdown = document.getElementById('notifDropdown');
+        if (dropdown) {
+            dropdown.style.display = notifOpen ? 'block' : 'none';
+            if (notifOpen) loadNotifs();
+        }
+    }
+    
+    async function loadNotifs() {
+        try {
+            var res = await fetch('/notifications/list');
+            var data = await res.json();
+            var list = document.getElementById('notifList');
+            
+            if (data.notifications && data.notifications.length > 0) {
+                list.innerHTML = data.notifications.map(function(n) {
+                    return '<div style="padding:12px 20px; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; ' + (n.readed ? '' : 'background:rgba(102,126,234,0.05); border-left:3px solid #667eea;') + '" onclick="readNotif(' + n.id + ')"><div style="font-size:13px; color:#ddd;">' + escapeHtml(n.message) + '</div><div style="font-size:11px; color:#888; margin-top:4px;">' + timeAgo(n.created_at) + '</div></div>';
+                }).join('');
+                
+                var badge = document.getElementById('notifBadge');
+                if (data.unreadCount > 0) {
+                    badge.textContent = data.unreadCount > 99 ? '99+' : data.unreadCount;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            } else {
+                list.innerHTML = '<div style="text-align:center; padding:40px; color:#888;"><i class="fas fa-bell-slash" style="font-size:30px; display:block; margin-bottom:10px; opacity:0.3;"></i>Sin notificaciones</div>';
+                document.getElementById('notifBadge').style.display = 'none';
+            }
+        } catch(e) {}
+    }
+    
+    async function readNotif(id) {
+        await fetch('/notifications/read/' + id, { method: 'POST' });
+        loadNotifs();
+    }
+    
+    async function markAllRead() {
+        await fetch('/notifications/read-all', { method: 'POST' });
+        loadNotifs();
+    }
+    
+    function timeAgo(date) {
+        var diff = Math.floor((new Date() - new Date(date)) / 1000);
+        if (diff < 60) return 'Ahora';
+        if (diff < 3600) return 'Hace ' + Math.floor(diff/60) + ' min';
+        if (diff < 86400) return 'Hace ' + Math.floor(diff/3600) + 'h';
+        return new Date(date).toLocaleDateString('es-ES');
+    }
+    
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        var dd = document.getElementById('notifDropdown');
+        var btn = document.querySelector('.notification-btn');
+        if (notifOpen && btn && dd && !btn.contains(e.target) && !dd.contains(e.target)) {
+            dd.style.display = 'none';
+            notifOpen = false;
+        }
+    });
+    
+    // Cargar contador inicial
+    (async function() {
+        try {
+            var res = await fetch('/notifications/unread-count');
+            var data = await res.json();
+            var badge = document.getElementById('notifBadge');
+            if (badge && data.count > 0) {
+                badge.textContent = data.count > 99 ? '99+' : data.count;
+                badge.style.display = 'flex';
+            }
+        } catch(e) {}
+    })();
+</script>

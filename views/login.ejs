@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Futbol Online - Iniciar Sesión</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .auth-container {
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        .auth-box {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 30px;
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .logo-section h1 {
+            color: #1a1a2e;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .logo-section p {
+            color: #888;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 4px;
+            border-radius: 12px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            color: #888;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+        }
+        
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .auth-form {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            color: #1a1a2e;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 45px 14px 16px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.9);
+            color: #1a1a2e;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        
+        .input-wrapper .toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #888;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .input-wrapper .toggle-password:hover {
+            color: #667eea;
+        }
+        
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .remember-me input[type="checkbox"] {
+            display: none;
+        }
+        
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ccc;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        
+        .remember-me input[type="checkbox"]:checked + .custom-checkbox {
+            background: #667eea;
+            border-color: #667eea;
+        }
+        
+        .custom-checkbox::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: white;
+            font-size: 11px;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.2s;
+        }
+        
+        .remember-me input[type="checkbox"]:checked + .custom-checkbox::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .remember-me span {
+            font-size: 13px;
+            color: #666;
+            user-select: none;
+        }
+        
+        .forgot-link {
+            font-size: 13px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .forgot-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Poppins', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+        
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn-submit.loading .loading-spinner {
+            display: inline-block;
+        }
+        
+        .btn-submit.loading .btn-text {
+            display: none;
+        }
+        
+        .error-message {
+            background: rgba(234, 67, 53, 0.1);
+            border: 1px solid rgba(234, 67, 53, 0.3);
+            color: #ea4335;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .error-message.show {
+            display: flex;
+        }
+        
+        @media (max-width: 480px) {
+            .auth-box {
+                padding: 30px 20px;
+            }
+            
+            .remember-forgot {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i class="fas fa-futbol"></i>
+                </div>
+                <h1>Futbol Online</h1>
+                <p>La mejor plataforma de streaming deportivo</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="tab-btn active" onclick="showTab('login')">Iniciar Sesión</button>
+                <button class="tab-btn" onclick="showTab('register')">Registrarse</button>
+            </div>
+            
+            <!-- Mensaje de error -->
+            <div class="error-message" id="errorMessage">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="errorText"></span>
+            </div>
+            
+            <!-- Formulario de Login -->
+            <div id="login-form" class="auth-form active">
+                <form onsubmit="handleLogin(event)" autocomplete="on">
+                    <div class="input-group">
+                        <label>Email</label>
+                        <div class="input-wrapper">
+                            <input type="email" id="login-email" placeholder="tu@email.com" required autocomplete="email">
+                            <i class="fas fa-envelope toggle-password"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Contraseña</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+                            <i class="fas fa-eye toggle-password" onclick="togglePassword('login-password', this)"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="remember-forgot">
+                        <label class="remember-me" for="rememberMe">
+                            <input type="checkbox" id="rememberMe">
+                            <div class="custom-checkbox"></div>
+                            <span>Recordarme</span>
+                        </label>
+                        <a href="/forgot-password" class="forgot-link">¿Olvidaste tu contraseña?</a>
+                    </div>
+                    
+                    <button type="submit" class="btn-submit" id="loginBtn">
+                        <span class="loading-spinner"></span>
+                        <span class="btn-text">Iniciar Sesión</span>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Formulario de Registro -->
+            <div id="register-form" class="auth-form">
+                <form onsubmit="handleRegister(event)" autocomplete="on">
+                    <div class="input-group">
+                        <label>Nombre de usuario (máx. 10 caracteres)</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="reg-username" maxlength="10" placeholder="TuUsuario" required autocomplete="username">
+                            <i class="fas fa-user toggle-password"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Email</label>
+                        <div class="input-wrapper">
+                            <input type="email" id="reg-email" placeholder="tu@email.com" required autocomplete="email">
+                            <i class="fas fa-envelope toggle-password"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Contraseña (mín. 8 caracteres)</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="reg-password" minlength="8" placeholder="••••••••" required autocomplete="new-password">
+                            <i class="fas fa-eye toggle-password" onclick="togglePassword('reg-password', this)"></i>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-submit" id="registerBtn">
+                        <span class="loading-spinner"></span>
+                        <span class="btn-text">Registrarse</span>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Formulario de Recuperación -->
+            <div id="forgot-form" class="auth-form">
+                <form onsubmit="handleForgotPassword(event)">
+                    <p style="color: #666; font-size: 14px; margin-bottom: 20px; text-align: center;">
+                        Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
+                    </p>
+                    <div class="input-group">
+                        <label>Email</label>
+                        <div class="input-wrapper">
+                            <input type="email" id="forgot-email" placeholder="tu@email.com" required>
+                            <i class="fas fa-envelope toggle-password"></i>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit" id="forgotBtn">
+                        <span class="loading-spinner"></span>
+                        <span class="btn-text">Enviar enlace de recuperación</span>
+                    </button>
+                    <a href="#" onclick="showTab('login')" style="display: block; text-align: center; margin-top: 15px; color: #667eea; text-decoration: none; font-size: 14px;">
+                        Volver al inicio de sesión
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ============ MOSTRAR/OCULTAR PESTAÑAS ============
+        function showTab(tabName) {
+            // Ocultar todos los formularios
+            document.querySelectorAll('.auth-form').forEach(form => {
+                form.classList.remove('active');
+            });
+            
+            // Mostrar formulario seleccionado
+            const formMap = {
+                'login': 'login-form',
+                'register': 'register-form'
+            };
+            
+            const formId = formMap[tabName];
+            if (formId) {
+                document.getElementById(formId).classList.add('active');
+            }
+            
+            // Actualizar botones de pestañas
+            document.querySelectorAll('.tab-btn').forEach((btn, index) => {
+                btn.classList.remove('active');
+                if ((tabName === 'login' && index === 0) || (tabName === 'register' && index === 1)) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Ocultar formulario de recuperación
+            document.getElementById('forgot-form').classList.remove('active');
+            
+            // Ocultar mensaje de error
+            hideError();
+        }
+        
+        function showForgotPassword(event) {
+            event.preventDefault();
+            document.querySelectorAll('.auth-form').forEach(form => {
+                form.classList.remove('active');
+            });
+            document.getElementById('forgot-form').classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            hideError();
+        }
+        
+        // ============ MOSTRAR/OCULTAR CONTRASEÑA ============
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+        
+        // ============ MOSTRAR ERROR ============
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.classList.add('show');
+        }
+        
+        function hideError() {
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+        
+        // ============ INICIAR SESIÓN ============
+        async function handleLogin(event) {
+            event.preventDefault();
+            hideError();
+            
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            if (!email || !password) {
+                showError('Por favor, completa todos los campos');
+                return;
+            }
+            
+            const btn = document.getElementById('loginBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        email, 
+                        password,
+                        rememberMe: rememberMe 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Si seleccionó "Recordarme", guardar en localStorage
+                    if (rememberMe) {
+                        localStorage.setItem('rememberedEmail', email);
+                    } else {
+                        localStorage.removeItem('rememberedEmail');
+                    }
+                    
+                    window.location.href = data.redirect || '/dashboard';
+                } else {
+                    if (data.needVerification) {
+                        window.location.href = '/verify';
+                    } else {
+                        showError(data.message || 'Error al iniciar sesión');
+                    }
+                }
+            } catch (error) {
+                showError('Error de conexión. Intenta de nuevo.');
+                console.error('Login error:', error);
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+        
+        // ============ REGISTRO ============
+        async function handleRegister(event) {
+            event.preventDefault();
+            hideError();
+            
+            const username = document.getElementById('reg-username').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            
+            // Validaciones
+            if (!username || !email || !password) {
+                showError('Todos los campos son requeridos');
+                return;
+            }
+            
+            if (username.length < 3 || username.length > 10) {
+                showError('El nombre de usuario debe tener entre 3 y 10 caracteres');
+                return;
+            }
+            
+            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                showError('El nombre de usuario solo puede contener letras, números y guiones bajos');
+                return;
+            }
+            
+            if (password.length < 8) {
+                showError('La contraseña debe tener al menos 8 caracteres');
+                return;
+            }
+            
+            if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+                showError('La contraseña debe contener mayúsculas, minúsculas y números');
+                return;
+            }
+            
+            const btn = document.getElementById('registerBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.href = '/verify';
+                } else {
+                    showError(data.message || 'Error al registrarse');
+                }
+            } catch (error) {
+                showError('Error de conexión. Intenta de nuevo.');
+                console.error('Register error:', error);
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+        
+        // ============ RECUPERAR CONTRASEÑA ============
+        async function handleForgotPassword(event) {
+            event.preventDefault();
+            hideError();
+            
+            const email = document.getElementById('forgot-email').value.trim();
+            
+            if (!email) {
+                showError('Por favor, ingresa tu email');
+                return;
+            }
+            
+            const btn = document.getElementById('forgotBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/forgot-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    showTab('login');
+                } else {
+                    showError(data.message || 'Error al enviar recuperación');
+                }
+            } catch (error) {
+                showError('Error de conexión. Intenta de nuevo.');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+        
+        // ============ RECORDAR EMAIL ============
+        // Cargar email recordado al cargar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            const rememberedEmail = localStorage.getItem('rememberedEmail');
+            if (rememberedEmail) {
+                document.getElementById('login-email').value = rememberedEmail;
+                document.getElementById('rememberMe').checked = true;
+            }
+        });
+        
+        // ============ ENTER EN PASSWORD ============
+        document.getElementById('login-password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleLogin(e);
+            }
+        });
+    </script>
+</body>
+</html>

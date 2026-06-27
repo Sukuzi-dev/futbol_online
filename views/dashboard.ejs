@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Futbol Online</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        .main-wrapper {
+            flex: 1;
+            margin-left: 0;
+            transition: margin-left 0.3s;
+            min-height: 100vh;
+        }
+        
+        .content {
+            padding: 30px;
+            max-width: 1400px;
+        }
+        
+        .welcome-section h1 { font-size: 32px; font-weight: 700; margin-bottom: 5px; }
+        .welcome-section p { color: #888; font-size: 16px; margin-bottom: 25px; }
+        
+        .total-viewers-banner {
+            background: linear-gradient(135deg, rgba(234,67,53,0.1), rgba(102,126,234,0.1));
+            border: 1px solid rgba(234,67,53,0.2);
+            border-radius: 16px;
+            padding: 20px 25px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .total-viewers-count {
+            font-size: 48px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ea4335, #667eea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .stat-icon {
+            width: 50px; height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        
+        .stat-icon.live { background: rgba(234,67,53,0.2); color: #ea4335; }
+        .stat-icon.viewers { background: rgba(52,168,83,0.2); color: #34a853; }
+        .stat-icon.streams { background: rgba(102,126,234,0.2); color: #667eea; }
+        
+        .stat-info h3 { font-size: 28px; font-weight: 700; }
+        .stat-info p { font-size: 12px; color: #888; }
+        
+        .section-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .live-indicator {
+            width: 10px; height: 10px;
+            background: #ea4335;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(234,67,53,0.7); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 10px rgba(234,67,53,0); }
+        }
+        
+        /* Grid de streams */
+        .streams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        
+        .stream-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+        
+        .stream-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border-color: rgba(102,126,234,0.3);
+        }
+        
+        /* Miniatura */
+        .stream-thumbnail {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .thumbnail-placeholder {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            transition: opacity 0.5s;
+        }
+        
+        .thumbnail-placeholder i {
+            font-size: 60px;
+            color: rgba(255,255,255,0.08);
+            margin-bottom: 10px;
+        }
+        
+        .thumbnail-loading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 11px;
+        }
+        
+        .mini-spinner {
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .thumbnail-img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            z-index: 0;
+        }
+        
+        .stream-card:hover .thumbnail-img {
+            transform: scale(1.05);
+            transition: transform 0.3s;
+        }
+        
+        .stream-thumbnail::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .live-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: #ea4335;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 2;
+        }
+        
+        .live-dot {
+            width: 7px; height: 7px;
+            background: white;
+            border-radius: 50%;
+        }
+        
+        .viewers-count {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 2;
+        }
+        
+        .viewers-count i { color: #34a853; font-size: 11px; }
+        .viewers-count.updating { animation: countUpdate 0.3s ease; }
+        
+        @keyframes countUpdate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .stream-info { padding: 18px; }
+        .stream-name { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+        
+        .stream-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .stream-type {
+            padding: 3px 8px;
+            background: rgba(102,126,234,0.2);
+            border-radius: 6px;
+            color: #667eea;
+            font-weight: 600;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+        
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px;
+            color: #888;
+        }
+        
+        .empty-state i { font-size: 70px; opacity: 0.2; display: block; margin-bottom: 15px; }
+        
+        @media (max-width: 1024px) {
+            .main-wrapper { margin-left: 0; }
+        }
+        
+        @media (max-width: 768px) {
+            .content { padding: 20px 15px; }
+            .welcome-section h1 { font-size: 24px; }
+            .streams-grid { grid-template-columns: 1fr; }
+            .total-viewers-count { font-size: 36px; }
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/sidebar') %>
+    
+    <div class="main-wrapper">
+        <%- include('partials/header', { pageTitle: 'Dashboard' }) %>
+        
+        <div class="content">
+            <div class="welcome-section">
+                <h1>¡Bienvenido, <%= user.username %>!</h1>
+                <p>Transmisiones de fútbol en vivo</p>
+            </div>
+            
+            <div class="total-viewers-banner">
+                <div>
+                    <h2 style="font-size:18px;"><i class="fas fa-users" style="color:#34a853;"></i> Espectadores Totales</h2>
+                    <p style="color:#888; font-size:13px;">Personas viendo ahora</p>
+                </div>
+                <div class="total-viewers-count" id="totalViewersCount">0</div>
+            </div>
+            
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon live"><i class="fas fa-broadcast-tower"></i></div>
+                    <div class="stat-info"><h3 id="liveStreamsCount">0</h3><p>En Vivo</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon viewers"><i class="fas fa-eye"></i></div>
+                    <div class="stat-info"><h3 id="totalViewersStat">0</h3><p>Espectadores</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon streams"><i class="fas fa-play-circle"></i></div>
+                    <div class="stat-info"><h3 id="totalStreamsCount"><%= streams ? streams.length : 0 %></h3><p>Streams Hoy</p></div>
+                </div>
+            </div>
+            
+            <div class="section-title">
+                <span class="live-indicator"></span> Transmisiones en Vivo
+            </div>
+            
+            <div class="streams-grid" id="streamsGrid">
+                <% if (streams && streams.length > 0) { %>
+                    <% streams.forEach(stream => { %>
+                        <a href="/stream/<%= stream.id %>" class="stream-card" data-stream-name="<%= stream.name.toLowerCase() %>">
+                            <div class="stream-thumbnail" id="thumb-<%= stream.id %>">
+                                <div class="thumbnail-placeholder">
+                                    <i class="fas fa-futbol"></i>
+                                    <div class="thumbnail-loading">
+                                        <div class="mini-spinner"></div>
+                                        <span>Cargando preview...</span>
+                                    </div>
+                                </div>
+                                <canvas id="canvas-<%= stream.id %>" style="display:none;"></canvas>
+                                <video id="previewVideo-<%= stream.id %>" style="display:none;" muted crossorigin="anonymous" preload="metadata"></video>
+                                <img id="thumbnail-<%= stream.id %>" class="thumbnail-img" style="display:none;" alt="<%= stream.name %>">
+                                
+                                <div class="live-badge">
+                                    <span class="live-dot"></span> EN DIRECTO
+                                </div>
+                                <div class="viewers-count" id="viewers-<%= stream.id %>">
+                                    <i class="fas fa-eye"></i>
+                                    <span class="count-number"><%= stream.viewer_count || 0 %></span>
+                                </div>
+                            </div>
+                            <div class="stream-info">
+                                <div class="stream-name"><%= stream.name %></div>
+                                <div class="stream-meta">
+                                    <span><i class="far fa-clock"></i> <%= stream.end_time ? moment(stream.end_time).fromNow() : 'Ahora' %></span>
+                                    <span class="stream-type"><%= stream.type ? stream.type.toUpperCase() : 'HLS' %></span>
+                                </div>
+                            </div>
+                        </a>
+                    <% }) %>
+                <% } else { %>
+                    <div class="empty-state">
+                        <i class="fas fa-tv"></i>
+                        <h3>No hay transmisiones en vivo</h3>
+                        <p>Vuelve más tarde para ver partidos</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ============ GENERAR MINIATURAS ============
+        const streamsData = <%- JSON.stringify(streams || []) %>;
+        
+        streamsData.forEach(stream => {
+            if (stream.url && stream.active) {
+                generateThumbnail(stream);
+            }
+        });
+        
+        function generateThumbnail(stream) {
+            const videoId = 'previewVideo-' + stream.id;
+            const canvasId = 'canvas-' + stream.id;
+            const thumbnailId = 'thumbnail-' + stream.id;
+            const thumbContainer = document.getElementById('thumb-' + stream.id);
+            
+            const video = document.getElementById(videoId);
+            const canvas = document.getElementById(canvasId);
+            const thumbnail = document.getElementById(thumbnailId);
+            const placeholder = thumbContainer ? thumbContainer.querySelector('.thumbnail-placeholder') : null;
+            
+            if (!video || !canvas || !thumbnail) return;
+            
+            video.muted = true;
+            video.crossOrigin = 'anonymous';
+            
+            function captureFrame() {
+                if (video.readyState >= 2) {
+                    canvas.width = 320;
+                    canvas.height = 180;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    thumbnail.src = canvas.toDataURL('image/jpeg', 0.7);
+                    thumbnail.style.display = 'block';
+                    if (placeholder) {
+                        placeholder.style.opacity = '0';
+                        setTimeout(() => { if (placeholder) placeholder.style.display = 'none'; }, 500);
+                    }
+                }
+            }
+            
+            function showPlaceholder() {
+                if (placeholder) {
+                    placeholder.innerHTML = '<i class="fas fa-futbol" style="font-size:50px; color:rgba(255,255,255,0.1);"></i><span style="color:#888; font-size:12px; margin-top:10px;">En vivo</span>';
+                }
+            }
+            
+            if (stream.url.endsWith('.m3u8') || stream.type === 'hls') {
+                if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+                    const hls = new Hls({ enableWorker: true });
+                    hls.loadSource(stream.url);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        video.play().then(() => setTimeout(captureFrame, 1500)).catch(showPlaceholder);
+                    });
+                    hls.on(Hls.Events.ERROR, showPlaceholder);
+                } else {
+                    video.src = stream.url;
+                    video.addEventListener('loadedmetadata', function() {
+                        video.play().then(() => setTimeout(captureFrame, 1500)).catch(showPlaceholder);
+                    });
+                }
+            } else if (stream.url.includes('.php')) {
+                if (placeholder) {
+                    placeholder.innerHTML = '<i class="fas fa-broadcast-tower" style="font-size:50px; color:rgba(234,67,53,0.3);"></i><span style="color:#888; font-size:12px; margin-top:10px;">Transmisión en vivo</span>';
+                }
+            } else {
+                video.src = stream.url;
+                video.addEventListener('loadedmetadata', function() {
+                    video.currentTime = 2;
+                });
+                video.addEventListener('seeked', function() {
+                    captureFrame();
+                    video.pause();
+                });
+            }
+            
+            setTimeout(() => {
+                if (!thumbnail.src || thumbnail.style.display === 'none') {
+                    showPlaceholder();
+                }
+            }, 8000);
+        }
+        
+        // ============ SOCKET.IO ============
+        const socket = io();
+        
+        socket.on('viewer-count-update', (data) => {
+            const el = document.getElementById('viewers-' + data.streamId);
+            if (el) {
+                el.querySelector('.count-number').textContent = data.viewerCount;
+                el.classList.add('updating');
+                setTimeout(() => el.classList.remove('updating'), 300);
+            }
+            updateCounters();
+        });
+        
+        socket.on('global-viewers-update', (data) => {
+            if (data.streams) {
+                data.streams.forEach(s => {
+                    const el = document.getElementById('viewers-' + s.id);
+                    if (el) el.querySelector('.count-number').textContent = s.viewer_count || 0;
+                });
+            }
+            updateCounters();
+        });
+        
+        function updateCounters() {
+            let total = 0, live = 0;
+            document.querySelectorAll('.viewers-count .count-number').forEach(el => {
+                total += parseInt(el.textContent) || 0;
+                live++;
+            });
+            document.getElementById('totalViewersCount').textContent = total;
+            document.getElementById('totalViewersStat').textContent = total;
+            document.getElementById('liveStreamsCount').textContent = live;
+        }
+        
+        function filterStreams() {
+            const query = document.getElementById('sidebarSearch')?.value.toLowerCase().trim() || '';
+            document.querySelectorAll('.stream-card').forEach(card => {
+                const name = card.getAttribute('data-stream-name') || '';
+                card.style.display = (!query || name.includes(query)) ? 'block' : 'none';
+            });
+        }
+        
+        setInterval(async () => {
+            try {
+                const res = await fetch('/dashboard/live-stats');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('totalViewersCount').textContent = data.totalViewers || 0;
+                    document.getElementById('totalViewersStat').textContent = data.totalViewers || 0;
+                }
+            } catch(e) {}
+        }, 15000);
+        
+        updateCounters();
+        socket.emit('request-viewers-update');
+    </script>
+</body>
+</html>

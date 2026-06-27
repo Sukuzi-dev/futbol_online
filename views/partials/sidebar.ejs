@@ -1,0 +1,327 @@
+<style>
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.6);
+        z-index: 99;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+    
+    .sidebar {
+        width: 280px;
+        height: 100vh;
+        background: rgba(22, 33, 62, 0.99);
+        backdrop-filter: blur(30px);
+        border-right: 1px solid rgba(255,255,255,0.08);
+        position: fixed;
+        left: -290px;
+        top: 0;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 5px 0 40px rgba(0,0,0,0.5);
+        overflow-y: auto;
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar-header {
+        padding: 25px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        text-align: center;
+        position: relative;
+    }
+    
+    .sidebar-close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #888;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+    
+    .sidebar-close-btn:hover {
+        background: rgba(234,67,53,0.2);
+        border-color: rgba(234,67,53,0.3);
+        color: #ea4335;
+    }
+    
+    .sidebar-logo {
+        font-size: 22px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .sidebar-nav {
+        padding: 15px;
+        flex: 1;
+    }
+    
+    .nav-section-title {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: #666;
+        margin-bottom: 10px;
+        padding-left: 12px;
+        font-weight: 600;
+        margin-top: 15px;
+    }
+    
+    .nav-section-title:first-child {
+        margin-top: 0;
+    }
+    
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        color: #ccc;
+        text-decoration: none;
+        transition: all 0.3s;
+        margin-bottom: 4px;
+        font-weight: 500;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    
+    .nav-item:hover {
+        background: rgba(255,255,255,0.08);
+        color: white;
+        transform: translateX(5px);
+    }
+    
+    .nav-item.active {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+        color: white;
+        border-left: 3px solid #667eea;
+    }
+    
+    .nav-item i {
+        width: 20px;
+        font-size: 16px;
+        text-align: center;
+    }
+    
+    .nav-item.admin-item i { color: #ea4335; }
+    .nav-item.owner-item i { color: #ffd700; }
+    
+    .sidebar-user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px;
+        margin: 10px 15px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 16px;
+    }
+    
+    .sidebar-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 2px solid #667eea;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+    
+    .sidebar-user-info h4 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .sidebar-user-info span {
+        font-size: 11px;
+        color: #888;
+    }
+    
+    .role-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .role-owner { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; }
+    .role-admin { background: linear-gradient(135deg, #ea4335, #c62828); color: white; }
+    .role-user { background: linear-gradient(135deg, #4a90e2, #357abd); color: white; }
+    
+    .sidebar-footer {
+        padding: 15px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    
+    .btn-logout {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        background: rgba(234, 67, 53, 0.1);
+        border: 1px solid rgba(234, 67, 53, 0.2);
+        color: #ea4335;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 500;
+        font-size: 14px;
+        width: 100%;
+        font-family: 'Poppins', sans-serif;
+        text-align: left;
+    }
+    
+    .btn-logout:hover {
+        background: rgba(234, 67, 53, 0.2);
+        transform: translateX(5px);
+    }
+</style>
+
+<!-- Overlay oscuro -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <button class="sidebar-close-btn" onclick="closeSidebar()" title="Cerrar menú">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="sidebar-logo">
+            <i class="fas fa-futbol"></i>
+            Futbol Online
+        </div>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <div class="nav-section-title">Principal</div>
+        
+        <a href="/dashboard" class="nav-item <%= currentPage === 'dashboard' ? 'active' : '' %>">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+        
+        <a href="/settings" class="nav-item <%= currentPage === 'settings' ? 'active' : '' %>">
+            <i class="fas fa-cog"></i> Configuración
+        </a>
+        
+        <% if (user && (user.role === 'admin' || user.role === 'owner')) { %>
+            <div class="nav-section-title">Administración</div>
+            <a href="/admin" class="nav-item admin-item <%= currentPage === 'admin' ? 'active' : '' %>">
+                <i class="fas fa-shield-alt"></i> Panel Admin
+            </a>
+        <% } %>
+        
+        <% if (user && user.role === 'owner') { %>
+            <div class="nav-section-title">Propietario</div>
+            <a href="/owner" class="nav-item owner-item <%= currentPage === 'owner' ? 'active' : '' %>">
+                <i class="fas fa-crown"></i> Panel Owner
+            </a>
+        <% } %>
+    </nav>
+    
+    <% if (user) { %>
+    <div class="sidebar-user">
+        <img src="/uploads/avatars/<%= user.avatar || 'default.png' %>" 
+             alt="<%= user.username %>" 
+             class="sidebar-avatar"
+             onerror="this.src='/uploads/avatars/default.png'">
+        <div class="sidebar-user-info">
+            <h4><%= user.username %></h4>
+            <span>
+                <% if (user.role === 'owner') { %>
+                    <span class="role-badge role-owner">Owner</span>
+                <% } else if (user.role === 'admin') { %>
+                    <span class="role-badge role-admin">Admin</span>
+                <% } else { %>
+                    <span class="role-badge role-user">Usuario</span>
+                <% } %>
+            </span>
+        </div>
+    </div>
+    <% } %>
+    
+    <div class="sidebar-footer">
+        <button class="btn-logout" onclick="window.location.href='/logout'">
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+    </div>
+</aside>
+
+<script>
+    // ABRIR sidebar
+    function openSidebar() {
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        
+        if (sidebar) sidebar.classList.add('active');
+        if (overlay) overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    // CERRAR sidebar
+    function closeSidebar() {
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        
+        if (sidebar) sidebar.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    
+    // TOGGLE sidebar
+    function toggleSidebar() {
+        var sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            if (sidebar.classList.contains('active')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        }
+    }
+    
+    // Cerrar con Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSidebar();
+        }
+    });
+    
+    // Cerrar al hacer clic en un enlace
+    document.addEventListener('DOMContentLoaded', function() {
+        var navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(function(item) {
+            item.addEventListener('click', function() {
+                setTimeout(closeSidebar, 200);
+            });
+        });
+    });
+</script>

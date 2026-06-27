@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Futbol Online</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; min-height: 100vh; display: flex; }
+        .main-wrapper { flex: 1; margin-left: 0; min-height: 100vh; }
+        .content { padding: 30px; max-width: 1500px; margin: 0 auto; }
+        
+        .admin-header { margin-bottom: 30px; }
+        .admin-badge { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; }
+        .admin-header h1 { font-size: 32px; font-weight: 700; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 5px; }
+        .admin-header p { color: #888; font-size: 16px; }
+        
+        .quick-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .quick-stat { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; transition: all 0.3s; }
+        .quick-stat:hover { border-color: rgba(102,126,234,0.3); transform: translateY(-2px); }
+        .quick-stat-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 15px; }
+        .quick-stat-icon.streams { background: rgba(234,67,53,0.2); color: #ea4335; }
+        .quick-stat-icon.banned { background: rgba(251,188,4,0.2); color: #fbbc04; }
+        .quick-stat-icon.clock { background: rgba(102,126,234,0.2); color: #667eea; }
+        .quick-stat h3 { font-size: 28px; font-weight: 700; }
+        .quick-stat p { font-size: 12px; color: #888; }
+        
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 25px; }
+        .admin-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 25px; transition: all 0.3s; }
+        .admin-card:hover { border-color: rgba(102,126,234,0.2); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .card-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .card-title i { color: #667eea; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; color: #ccc; font-size: 13px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: white; font-size: 13px; font-family: 'Poppins', sans-serif; transition: all 0.3s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #667eea; background: rgba(255,255,255,0.12); }
+        .form-group select option { background: #1a1a2e; color: white; }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .input-hint { display: block; margin-top: 4px; font-size: 11px; color: #888; }
+        
+        .btn { padding: 10px 18px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-family: 'Poppins', sans-serif; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.4); }
+        .btn-warning { background: linear-gradient(135deg, #fbbc04, #f57c00); color: #000; }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(251,188,4,0.4); }
+        .btn-success { background: linear-gradient(135deg, #34a853, #1b5e20); color: white; }
+        .btn-danger { background: linear-gradient(135deg, #ea4335, #c62828); color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 11px; border-radius: 6px; border: none; cursor: pointer; transition: all 0.3s; font-family: 'Poppins', sans-serif; display: inline-flex; align-items: center; gap: 4px; color: white; }
+        .btn-sm.view { background: #667eea; }
+        .btn-sm.stop { background: #ea4335; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-row { display: flex; gap: 8px; }
+        
+        .streams-list { max-height: 400px; overflow-y: auto; }
+        .stream-item { background: rgba(255,255,255,0.03); padding: 12px 15px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; transition: all 0.3s; }
+        .stream-item:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
+        .stream-item.live { border-left: 3px solid #ea4335; }
+        .stream-item.scheduled { border-left: 3px solid #fbbc04; }
+        .stream-info { flex: 1; }
+        .stream-name { font-weight: 600; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; font-size: 14px; }
+        .live-dot { width: 7px; height: 7px; background: #ea4335; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+        .stream-meta { font-size: 11px; color: #888; display: flex; gap: 12px; flex-wrap: wrap; }
+        .stream-actions { display: flex; gap: 6px; }
+        
+        .users-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .users-table th { text-align: left; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.1); color: #888; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        .users-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .users-table tr:hover td { background: rgba(255,255,255,0.02); }
+        
+        .sancion-badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+        .sancion-mute { background: rgba(251,188,4,0.2); color: #fbbc04; border: 1px solid rgba(251,188,4,0.3); }
+        .sancion-tempban { background: rgba(255,152,0,0.2); color: #ff9800; border: 1px solid rgba(255,152,0,0.3); }
+        .sancion-permban { background: rgba(234,67,53,0.2); color: #ea4335; border: 1px solid rgba(234,67,53,0.3); }
+        .btn-quitar { padding: 6px 12px; font-size: 11px; border-radius: 6px; border: none; cursor: pointer; transition: all 0.3s; font-family: 'Poppins', sans-serif; display: inline-flex; align-items: center; gap: 4px; background: rgba(52,168,83,0.2); color: #34a853; border: 1px solid rgba(52,168,83,0.3); }
+        .btn-quitar:hover { background: rgba(52,168,83,0.4); transform: translateY(-1px); }
+        
+        .empty-state { text-align: center; padding: 30px; color: #888; }
+        .empty-state i { font-size: 40px; margin-bottom: 10px; opacity: 0.3; display: block; }
+        .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        @media (max-width: 1024px) { .admin-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .content { padding: 20px 15px; } .admin-header h1 { font-size: 24px; } .form-row { grid-template-columns: 1fr; } .stream-item { flex-direction: column; gap: 8px; } .stream-actions { width: 100%; justify-content: flex-end; } .users-table { font-size: 11px; } }
+    </style>
+</head>
+<body>
+    <%- include('partials/sidebar') %>
+    <div class="main-wrapper">
+        <%- include('partials/header', { pageTitle: 'Panel Admin' }) %>
+        <div class="content">
+            <div class="admin-header">
+                <div class="admin-badge"><i class="fas fa-shield-alt"></i> Administrador</div>
+                <h1>Panel de Administración</h1>
+                <p>Gestiona streams, modera usuarios y controla el contenido</p>
+            </div>
+            
+            <div class="quick-stats">
+                <div class="quick-stat"><div class="quick-stat-icon streams"><i class="fas fa-broadcast-tower"></i></div><h3 id="activeStreamsCount">0</h3><p>Streams Activos</p></div>
+                <div class="quick-stat"><div class="quick-stat-icon banned"><i class="fas fa-ban"></i></div><h3 id="bannedUsersCount">0</h3><p>Usuarios Baneados</p></div>
+                <div class="quick-stat"><div class="quick-stat-icon clock"><i class="fas fa-clock"></i></div><h3 id="scheduledCount">0</h3><p>Programados</p></div>
+            </div>
+            
+            <div class="admin-grid">
+                <!-- AGREGAR STREAM -->
+                <div class="admin-card">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-plus-circle"></i> Nueva Transmisión</div></div>
+                    <div class="form-group"><label>Nombre (máx. 20)</label><input type="text" id="streamName" maxlength="20" placeholder="Ej: Final Champions"><span class="input-hint" id="nameCount">0/20</span></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Tipo</label><select id="streamType"><option value="">Seleccionar...</option><option value="hls">HLS</option><option value="rtmp">RTMP</option><option value="url">URL Directa</option></select></div>
+                        <div class="form-group"><label>Duración (min)</label><input type="number" id="streamDuration" min="1" max="480" value="90"></div>
+                    </div>
+                    <div class="form-group"><label>URL del Stream</label><input type="text" id="streamUrlInput" placeholder="https://..."></div>
+                    <button class="btn btn-primary" onclick="agregarStream()" id="addStreamBtn"><i class="fas fa-play"></i> Iniciar Transmisión</button>
+                </div>
+                
+                <!-- PROGRAMAR STREAM -->
+                <div class="admin-card">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-calendar-alt"></i> Programar Transmisión</div></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="schedName" maxlength="20" placeholder="Nombre del partido"></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Tipo</label><select id="schedType"><option value="">Seleccionar...</option><option value="hls">HLS</option><option value="rtmp">RTMP</option><option value="url">URL</option></select></div>
+                        <div class="form-group"><label>Duración (min)</label><input type="number" id="schedDuration" min="1" max="480" value="90"></div>
+                    </div>
+                    <div class="form-group"><label>URL</label><input type="text" id="schedUrlInput" placeholder="https://..."></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>📅 Fecha</label><input type="date" id="schedDate"></div>
+                        <div class="form-group"><label>⏰ Hora</label><input type="time" id="schedTime"></div>
+                    </div>
+                    <button class="btn btn-warning" onclick="programarStream()" id="scheduleBtn"><i class="fas fa-clock"></i> Programar</button>
+                </div>
+                
+                <!-- STREAMS ACTIVOS -->
+                <div class="admin-card">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-list"></i> Transmisiones Activas</div><button class="btn-sm view" onclick="cargarStreams()"><i class="fas fa-sync-alt"></i> Actualizar</button></div>
+                    <div class="streams-list" id="activeStreamsList"><div class="empty-state"><i class="fas fa-tv"></i><p>Cargando...</p></div></div>
+                </div>
+                
+                <!-- PROGRAMADAS -->
+                <div class="admin-card">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-clock"></i> Transmisiones Programadas</div><button class="btn-sm view" onclick="cargarProgramadas()"><i class="fas fa-sync-alt"></i> Actualizar</button></div>
+                    <div class="streams-list" id="scheduledStreamsList"><div class="empty-state"><i class="fas fa-calendar"></i><p>Cargando...</p></div></div>
+                </div>
+                
+                <!-- MODERACIÓN -->
+                <div class="admin-card">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-gavel"></i> Moderación de Usuarios</div></div>
+                    <div class="form-group"><label>Nombre de Usuario</label><input type="text" id="modUsername" maxlength="10" placeholder="Usuario a moderar..."></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Tipo de Sanción</label><select id="modAction" onchange="toggleBanDuration()"><option value="mute">Silenciar (24h)</option><option value="temp_ban">Ban Temporal</option><option value="perm_ban">Ban Permanente</option></select></div>
+                        <div class="form-group" id="banDurationGroup" style="display:none;"><label>Duración (horas)</label><input type="number" id="banDuration" min="1" max="720" value="24"></div>
+                    </div>
+                    <div class="form-group"><label>Razón</label><textarea id="modReason" placeholder="Motivo de la sanción..."></textarea></div>
+                    <div class="btn-row">
+                        <button class="btn btn-warning" onclick="moderarUsuario()"><i class="fas fa-gavel"></i> Sancionar</button>
+                        <button class="btn btn-success" onclick="desbanearUsuario()"><i class="fas fa-undo"></i> Desbanear</button>
+                    </div>
+                </div>
+                
+                <!-- NOTIFICACIÓN GLOBAL -->
+                <div class="admin-card">
+                    <div class="card-header"><div class="card-title"><i class="fas fa-bell"></i> Notificación Global</div></div>
+                    <div class="form-group"><label>Mensaje para todos los usuarios</label><textarea id="notifMessage" maxlength="500" placeholder="Escribe el mensaje..."></textarea><span class="input-hint" id="notifCount">0/500</span></div>
+                    <button class="btn btn-primary" onclick="enviarNotificacion()" id="notifBtn"><i class="fas fa-paper-plane"></i> Enviar a Todos</button>
+                </div>
+                
+                <!-- USUARIOS SANCIONADOS -->
+                <div class="admin-card" style="grid-column: 1 / -1;">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fas fa-list-alt"></i> Usuarios Sancionados</div>
+                        <button class="btn-sm view" onclick="cargarSancionados()"><i class="fas fa-sync-alt"></i> Actualizar</button>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Tipo Sanción</th>
+                                    <th>Razón</th>
+                                    <th>Fecha</th>
+                                    <th>Expira</th>
+                                    <th>Por</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sancionadosTableBody">
+                                <tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">Cargando sanciones...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL DE CONFIRMACIÓN -->
+    <div id="confirmModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:#1a1a2e; border:1px solid rgba(102,126,234,0.3); border-radius:20px; padding:30px; max-width:450px; width:90%; text-align:center; animation:modalIn 0.3s ease; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+            <div style="font-size:50px; margin-bottom:15px; color:#fbbc04;"><i class="fas fa-exclamation-triangle"></i></div>
+            <h3 style="font-size:20px; margin-bottom:10px; color:white;" id="confirmTitle">Confirmar Acción</h3>
+            <p style="color:#aaa; font-size:14px; margin-bottom:25px; line-height:1.5; white-space:pre-line;" id="confirmMessage"></p>
+            <div style="display:flex; gap:10px;" id="confirmBtns">
+                <button onclick="cerrarConfirmModal()" style="flex:1; padding:12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:10px; color:white; cursor:pointer; font-family:'Poppins',sans-serif; font-size:14px;">Cancelar</button>
+                <button id="confirmOkBtn" style="flex:1; padding:12px; background:linear-gradient(135deg, #667eea, #764ba2); border:none; border-radius:10px; color:white; cursor:pointer; font-weight:600; font-family:'Poppins',sans-serif; font-size:14px;">Confirmar</button>
+            </div>
+            <div id="confirmLoading" style="display:none; padding:20px;"><span class="loading-spinner"></span> Procesando...</div>
+        </div>
+    </div>
+    
+    <!-- MODAL DE RESULTADO -->
+    <div id="resultModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); z-index:10001; align-items:center; justify-content:center;">
+        <div style="background:#1a1a2e; border-radius:20px; padding:30px; max-width:450px; width:90%; text-align:center; animation:modalIn 0.3s ease; box-shadow:0 20px 60px rgba(0,0,0,0.5);" id="resultBox">
+            <div style="font-size:60px; margin-bottom:15px;" id="resultIcon"></div>
+            <h3 style="font-size:20px; margin-bottom:10px; color:white;" id="resultTitle"></h3>
+            <p style="color:#aaa; font-size:14px; margin-bottom:25px;" id="resultMessage"></p>
+            <button onclick="cerrarResultModal()" style="padding:12px 30px; background:linear-gradient(135deg, #667eea, #764ba2); border:none; border-radius:10px; color:white; cursor:pointer; font-weight:600; font-family:'Poppins',sans-serif; font-size:14px;">Aceptar</button>
+        </div>
+    </div>
+    
+    <style>@keyframes modalIn { from { opacity:0; transform:scale(0.9) translateY(-20px); } to { opacity:1; transform:scale(1) translateY(0); } }</style>
+    
+    <script>
+        let confirmCallback = null;
+        
+        // ============ MODALES ============
+        function mostrarConfirmacion(titulo, mensaje, callback) {
+            document.getElementById('confirmTitle').textContent = titulo;
+            document.getElementById('confirmMessage').textContent = mensaje;
+            document.getElementById('confirmBtns').style.display = 'flex';
+            document.getElementById('confirmLoading').style.display = 'none';
+            document.getElementById('confirmModal').style.display = 'flex';
+            confirmCallback = callback;
+        }
+        function cerrarConfirmModal() { document.getElementById('confirmModal').style.display = 'none'; confirmCallback = null; }
+        
+        document.getElementById('confirmOkBtn').addEventListener('click', async function() {
+            document.getElementById('confirmBtns').style.display = 'none';
+            document.getElementById('confirmLoading').style.display = 'block';
+            try { if (confirmCallback) await confirmCallback(); } catch(e) {}
+            cerrarConfirmModal();
+        });
+        
+        function mostrarResultado(exito, titulo, mensaje) {
+            const box = document.getElementById('resultBox');
+            document.getElementById('resultIcon').innerHTML = exito 
+                ? '<i class="fas fa-check-circle" style="color:#34a853;"></i>' 
+                : '<i class="fas fa-times-circle" style="color:#ea4335;"></i>';
+            document.getElementById('resultTitle').textContent = titulo;
+            document.getElementById('resultMessage').textContent = mensaje;
+            box.style.border = exito ? '1px solid rgba(52,168,83,0.3)' : '1px solid rgba(234,67,53,0.3)';
+            document.getElementById('resultModal').style.display = 'flex';
+        }
+        function cerrarResultModal() { document.getElementById('resultModal').style.display = 'none'; }
+        
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { cerrarConfirmModal(); cerrarResultModal(); } });
+        document.getElementById('confirmModal').addEventListener('click', function(e) { if (e.target === this) cerrarConfirmModal(); });
+        document.getElementById('resultModal').addEventListener('click', function(e) { if (e.target === this) cerrarResultModal(); });
+        
+        // Contadores
+        document.getElementById('streamName').addEventListener('input', function() { document.getElementById('nameCount').textContent = this.value.length + '/20'; });
+        document.getElementById('notifMessage').addEventListener('input', function() { document.getElementById('notifCount').textContent = this.value.length + '/500'; });
+        function toggleBanDuration() { document.getElementById('banDurationGroup').style.display = document.getElementById('modAction').value === 'temp_ban' ? 'block' : 'none'; }
+        
+        // ============ AGREGAR STREAM ============
+        async function agregarStream() {
+            const n = document.getElementById('streamName').value.trim();
+            const t = document.getElementById('streamType').value;
+            const u = document.getElementById('streamUrlInput').value.trim();
+            const d = document.getElementById('streamDuration').value;
+            if (!n || !t || !u || !d) { mostrarResultado(false, 'Error', 'Completa todos los campos'); return; }
+            mostrarConfirmacion('Iniciar Transmisión', '¿Iniciar "' + n + '"?', async () => {
+                const btn = document.getElementById('addStreamBtn'); btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span>Creando...';
+                try {
+                    const res = await fetch('/admin/add-stream', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: n, type: t, url: u, duration: parseInt(d) }) });
+                    const data = await res.json();
+                    if (data.success) { document.getElementById('streamName').value = ''; document.getElementById('streamUrlInput').value = ''; document.getElementById('nameCount').textContent = '0/20'; cargarStreams(); mostrarResultado(true, '✅ Transmisión Iniciada', data.message); }
+                    else mostrarResultado(false, '❌ Error', data.message);
+                } catch(e) { mostrarResultado(false, '❌ Error', 'Error de conexión'); }
+                btn.disabled = false; btn.innerHTML = '<i class="fas fa-play"></i> Iniciar Transmisión';
+            });
+        }
+        
+        // ============ PROGRAMAR STREAM ============
+        async function programarStream() {
+            const n = document.getElementById('schedName').value.trim();
+            const t = document.getElementById('schedType').value;
+            const u = document.getElementById('schedUrlInput').value.trim();
+            const d = document.getElementById('schedDuration').value;
+            const sd = document.getElementById('schedDate').value;
+            const st = document.getElementById('schedTime').value;
+            if (!n || !t || !u || !d || !sd || !st) { mostrarResultado(false, 'Error', 'Completa todos los campos'); return; }
+            mostrarConfirmacion('Programar', '¿Programar "' + n + '" para ' + sd + ' a las ' + st + '?', async () => {
+                const btn = document.getElementById('scheduleBtn'); btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span>Programando...';
+                try {
+                    const res = await fetch('/admin/add-stream', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: n, type: t, url: u, duration: parseInt(d), scheduledDate: sd, scheduledTime: st }) });
+                    const data = await res.json();
+                    if (data.success) { document.getElementById('schedName').value = ''; document.getElementById('schedUrlInput').value = ''; cargarProgramadas(); mostrarResultado(true, '✅ Programada', data.message); }
+                    else mostrarResultado(false, '❌ Error', data.message);
+                } catch(e) { mostrarResultado(false, '❌ Error', 'Error de conexión'); }
+                btn.disabled = false; btn.innerHTML = '<i class="fas fa-clock"></i> Programar';
+            });
+        }
+        
+        // ============ DETENER STREAM ============
+        function detenerStream(id, name) {
+            mostrarConfirmacion('🛑 Detener', '¿Detener "' + name + '"?', async () => {
+                try {
+                    const res = await fetch('/admin/delete-stream/' + id, { method: 'DELETE' });
+                    const data = await res.json();
+                    if (data.success) { cargarStreams(); cargarProgramadas(); mostrarResultado(true, '✅ Detenido', data.message); }
+                    else mostrarResultado(false, '❌ Error', data.message);
+                } catch(e) { mostrarResultado(false, '❌ Error', 'Error'); }
+            });
+        }
+        
+        // ============ MODERAR ============
+        async function moderarUsuario() {
+            const u = document.getElementById('modUsername').value.trim();
+            const a = document.getElementById('modAction').value;
+            const r = document.getElementById('modReason').value.trim();
+            const d = document.getElementById('banDuration').value;
+            if (!u) { mostrarResultado(false, 'Error', 'Ingresa un usuario'); return; }
+            const names = { mute: 'Silenciar', temp_ban: 'Ban Temporal', perm_ban: 'Ban Permanente' };
+            mostrarConfirmacion('🔨 ' + names[a], '¿' + names[a] + ' a "' + u + '"?', async () => {
+                try {
+                    const res = await fetch('/admin/moderate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, action: a, reason: r, duration: a === 'temp_ban' ? parseInt(d) : null }) });
+                    const data = await res.json();
+                    if (data.success) { document.getElementById('modUsername').value = ''; document.getElementById('modReason').value = ''; cargarSancionados(); mostrarResultado(true, '✅ Sanción Aplicada', data.message); }
+                    else mostrarResultado(false, '❌ Error', data.message);
+                } catch(e) { mostrarResultado(false, '❌ Error', 'Error'); }
+            });
+        }
+        
+        async function desbanearUsuario() {
+            const u = document.getElementById('modUsername').value.trim();
+            if (!u) { mostrarResultado(false, 'Error', 'Ingresa un usuario'); return; }
+            mostrarConfirmacion('✅ Desbanear', '¿Desbanear a "' + u + '"?', async () => {
+                try {
+                    const res = await fetch('/admin/unban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u }) });
+                    const data = await res.json();
+                    if (data.success) { document.getElementById('modUsername').value = ''; cargarSancionados(); mostrarResultado(true, '✅ Desbaneado', data.message); }
+                    else mostrarResultado(false, '❌ Error', data.message);
+                } catch(e) { mostrarResultado(false, '❌ Error', 'Error'); }
+            });
+        }
+        
+        // ============ NOTIFICACIÓN ============
+        async function enviarNotificacion() {
+            const m = document.getElementById('notifMessage').value.trim();
+            if (!m) { mostrarResultado(false, 'Error', 'Escribe un mensaje'); return; }
+            mostrarConfirmacion('📢 Enviar', '¿Enviar a TODOS?', async () => {
+                const btn = document.getElementById('notifBtn'); btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span>Enviando...';
+                try {
+                    const res = await fetch('/admin/send-notification', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: m }) });
+                    const data = await res.json();
+                    if (data.success) { document.getElementById('notifMessage').value = ''; document.getElementById('notifCount').textContent = '0/500'; mostrarResultado(true, '✅ Enviado', data.message); }
+                    else mostrarResultado(false, '❌ Error', data.message);
+                } catch(e) { mostrarResultado(false, '❌ Error', 'Error'); }
+                btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar a Todos';
+            });
+        }
+        
+        // ============ CARGAR LISTAS ============
+        async function cargarStreams() {
+            try {
+                const res = await fetch('/dashboard/live-stats'); const data = await res.json();
+                const list = document.getElementById('activeStreamsList');
+                document.getElementById('activeStreamsCount').textContent = data.streams ? data.streams.length : 0;
+                if (data.streams && data.streams.length > 0) {
+                    list.innerHTML = data.streams.map(s => '<div class="stream-item live"><div class="stream-info"><div class="stream-name"><span class="live-dot"></span> ' + esc(s.name) + '</div><div class="stream-meta"><span>ID: ' + (s.stream_id || s.id) + '</span><span>' + (s.type ? s.type.toUpperCase() : 'HLS') + '</span><span><i class="fas fa-eye"></i> ' + (s.viewer_count || 0) + '</span></div></div><div class="stream-actions"><a href="/stream/' + s.id + '" target="_blank" class="btn-sm view"><i class="fas fa-play"></i> Ver</a><button class="btn-sm stop" onclick="detenerStream(\'' + s.id + '\',\'' + esc(s.name) + '\')"><i class="fas fa-stop"></i> Detener</button></div></div>').join('');
+                } else { list.innerHTML = '<div class="empty-state"><i class="fas fa-tv"></i><p>No hay streams activos</p></div>'; }
+            } catch(e) {}
+        }
+        
+        async function cargarProgramadas() {
+            try {
+                const res = await fetch('/admin/scheduled-streams'); const data = await res.json();
+                const list = document.getElementById('scheduledStreamsList');
+                document.getElementById('scheduledCount').textContent = data.streams ? data.streams.length : 0;
+                if (data.streams && data.streams.length > 0) {
+                    list.innerHTML = data.streams.map(s => '<div class="stream-item scheduled"><div class="stream-info"><div class="stream-name"><i class="fas fa-clock" style="color:#fbbc04;"></i> ' + esc(s.name) + '</div><div class="stream-meta"><span>📅 ' + new Date(s.scheduled_start).toLocaleDateString('es-ES') + '</span><span>⏰ ' + new Date(s.scheduled_start).toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'}) + '</span><span>' + s.type.toUpperCase() + '</span></div></div><button class="btn-sm stop" onclick="detenerStream(\'' + s.id + '\',\'' + esc(s.name) + '\')"><i class="fas fa-times"></i> Cancelar</button></div>').join('');
+                } else { list.innerHTML = '<div class="empty-state"><i class="fas fa-calendar"></i><p>No hay programadas</p></div>'; }
+            } catch(e) {}
+        }
+        
+        // ============ USUARIOS SANCIONADOS ============
+        async function cargarSancionados() {
+            const tbody = document.getElementById('sancionadosTableBody');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;"><span class="loading-spinner"></span> Cargando sanciones...</td></tr>';
+            try {
+                const res = await fetch('/admin/sanctioned-users');
+                const data = await res.json();
+                
+                if (data.success && data.bans && data.bans.length > 0) {
+                    tbody.innerHTML = data.bans.map(b => {
+                        const badge = b.ban_type === 'mute' ? 'sancion-mute' : b.ban_type === 'temp_ban' ? 'sancion-tempban' : 'sancion-permban';
+                        const icon = b.ban_type === 'mute' ? '🔇' : b.ban_type === 'temp_ban' ? '⏳' : '🚫';
+                        const tipo = b.ban_type === 'mute' ? 'Silencio' : b.ban_type === 'temp_ban' ? 'Temporal' : 'Permanente';
+                        const expira = b.expiry ? new Date(b.expiry).toLocaleString('es-ES') : 'Nunca';
+                        return '<tr>' +
+                            '<td><div style="display:flex;align-items:center;gap:8px;"><span class="sancion-badge ' + badge + '">' + icon + ' ' + tipo + '</span><strong>' + esc(b.banned_username) + '</strong></div></td>' +
+                            '<td><span class="sancion-badge ' + badge + '">' + tipo + '</span></td>' +
+                            '<td style="font-size:12px;color:#ccc;">' + (b.reason || 'Sin razón') + '</td>' +
+                            '<td style="font-size:11px;color:#888;">' + new Date(b.created_at).toLocaleDateString('es-ES') + '</td>' +
+                            '<td style="font-size:11px;color:#888;">' + expira + '</td>' +
+                            '<td style="font-size:11px;color:#888;">' + esc(b.mod_username) + '</td>' +
+                            '<td><button class="btn-quitar" onclick="quitarSancion(\'' + esc(b.banned_username) + '\',\'' + b.ban_type + '\')"><i class="fas fa-undo"></i> Quitar</button></td>' +
+                            '</tr>';
+                    }).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#888;"><i class="fas fa-check-circle" style="font-size:30px;display:block;margin-bottom:10px;opacity:0.3;"></i>No hay usuarios sancionados</td></tr>';
+                }
+            } catch(e) {
+                console.error('Error al cargar sancionados:', e);
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#ea4335;"><i class="fas fa-exclamation-triangle" style="font-size:25px;display:block;margin-bottom:8px;"></i>Error al cargar sanciones</td></tr>';
+            }
+        }
+        
+        async function quitarSancion(username, tipo) {
+            const txt = tipo === 'mute' ? 'el silencio' : tipo === 'temp_ban' ? 'el ban temporal' : 'el ban permanente';
+            mostrarConfirmacion('🔓 Quitar Sanción', '¿Quitar ' + txt + ' a "' + username + '"?\n\nEl usuario podrá interactuar nuevamente.', async () => {
+                try {
+                    const res = await fetch('/admin/unban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) });
+                    const data = await res.json();
+                    if (data.success) {
+                        cargarSancionados();
+                        mostrarResultado(true, '✅ Sanción Eliminada', 'La sanción de "' + username + '" ha sido eliminada correctamente.');
+                    } else {
+                        mostrarResultado(false, '❌ Error', data.message || 'No se pudo quitar la sanción');
+                    }
+                } catch(e) {
+                    mostrarResultado(false, '❌ Error', 'Error de conexión al quitar la sanción');
+                }
+            });
+        }
+        
+        function esc(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        
+        // ============ INICIAR ============
+        cargarStreams();
+        cargarProgramadas();
+        cargarSancionados();
+    </script>
+</body>
+</html>
