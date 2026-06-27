@@ -1,0 +1,6 @@
+node_modules/
+.env
+logs/
+*.log
+public/uploads/avatars/*
+!public/uploads/avatars/default.png
