@@ -20,9 +20,6 @@ const io = socketIO(server, {
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-// Configuración de base de datos
-let pool;
-
 if (process.env.DATABASE_URL) {
     // Railway proporciona DATABASE_URL
     const url = new URL(process.env.DATABASE_URL);
