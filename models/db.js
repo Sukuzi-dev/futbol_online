@@ -31,8 +31,6 @@ if (process.env.DATABASE_URL) {
     });
 }
 
-module.exports = { pool };
-
 // Función para probar la conexión
 async function testConnection() {
     try {
