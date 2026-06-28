@@ -3,12 +3,12 @@ require('dotenv').config();
 
 let pool;
 
-// Railway proporciona DATABASE_URL automáticamente
+// Railway siempre da DATABASE_URL
 if (process.env.DATABASE_URL) {
     const url = new URL(process.env.DATABASE_URL);
     pool = mysql.createPool({
         host: url.hostname,
-        port: url.port || 3306,
+        port: url.port,
         user: url.username,
         password: url.password,
         database: url.pathname.replace('/', ''),
@@ -18,18 +18,20 @@ if (process.env.DATABASE_URL) {
         charset: 'utf8mb4'
     });
 } else {
-    // Configuración local
+    // Solo desarrollo local
     pool = mysql.createPool({
-        host: process.env.DB_HOST || 'localhost',
-        user: process.env.DB_USER || 'root',
-        password: process.env.DB_PASSWORD || '',
-        database: process.env.DB_NAME || 'futbol_online',
+        host: 'localhost',
+        user: 'root',
+        password: '',
+        database: 'futbol_online',
         waitForConnections: true,
         connectionLimit: 10,
         queueLimit: 0,
         charset: 'utf8mb4'
     });
 }
+
+module.exports = { pool };
 
 // Función para probar la conexión
 async function testConnection() {
