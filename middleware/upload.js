@@ -1,47 +1,36 @@
 const multer = require('multer');
+const multerS3 = require('multer-s3');
 const path = require('path');
 const crypto = require('crypto');
 
-// Configuración de almacenamiento para avatares
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, '../public/uploads/avatars'));
-    },
-    filename: function (req, file, cb) {
-        // Generar nombre único para evitar colisiones
-        const uniqueSuffix = crypto.randomBytes(16).toString('hex');
-        const extension = path.extname(file.originalname).toLowerCase();
-        cb(null, `avatar-${req.session.user.id}-${uniqueSuffix}${extension}`);
-    }
-});
+const { r2Client } = require('../config/r2');
 
-// Validación de archivos
-const fileFilter = (req, file, cb) => {
-    // Tipos de archivo permitidos
-    const allowedTypes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/gif',
-        'image/webp'
-    ];
-
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error('Tipo de archivo no permitido. Solo se permiten: JPEG, JPG, PNG, GIF y WebP'), false);
-    }
-};
-
-// Configuración de multer
 const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter,
-    limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB máximo
-        files: 1 // Solo un archivo a la vez
+    storage: multerS3({
+        s3: r2Client,
+        bucket: 'futbol-online-uploads',
+        metadata: function (req, file, cb) {
+            cb(null, { fieldName: file.fieldname });
+        },
+        key: function (req, file, cb) {
+            const uniqueId = crypto.randomBytes(16).toString('hex');
+            const ext = file.originalname.split('.').pop();
+            cb(null, `avatars/${req.session.user.id}-${uniqueId}.${ext}`);
+        }
+    }),
+    limits: { 
+        fileSize: 5 * 1024 * 1024,
+        files: 1 }, // 5MB
+    fileFilter: function (req, file, cb) {
+        const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (allowed.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Formato no permitido'), false);
+        }
     }
 });
+
 
 // Middleware para manejar errores de multer
 const handleMulterError = (err, req, res, next) => {
