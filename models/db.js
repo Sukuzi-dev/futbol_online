@@ -3,6 +3,37 @@ require('dotenv').config();
 
 let pool;
 
+console.log('🔍 DATABASE_URL:', process.env.DATABASE_URL ? 'EXISTE' : 'NO EXISTE');
+
+if (process.env.DATABASE_URL) {
+    const url = new URL(process.env.DATABASE_URL);
+    console.log('📊 Host:', url.hostname);
+    console.log('📊 Puerto:', url.port);
+    console.log('📊 Usuario:', url.username);
+    console.log('📊 BD:', url.pathname.replace('/', ''));
+    
+    pool = mysql.createPool({
+        host: url.hostname,
+        port: url.port,
+        user: url.username,
+        password: url.password,
+        database: url.pathname.replace('/', ''),
+        waitForConnections: true,
+        connectionLimit: 10,
+        charset: 'utf8mb4'
+    });
+} else {
+    pool = mysql.createPool({
+        host: 'localhost',
+        user: 'root',
+        password: '',
+        database: 'futbol_online',
+        waitForConnections: true,
+        connectionLimit: 10,
+        charset: 'utf8mb4'
+    });
+}
+
 // Railway siempre da DATABASE_URL
 if (process.env.DATABASE_URL) {
     const url = new URL(process.env.DATABASE_URL);
