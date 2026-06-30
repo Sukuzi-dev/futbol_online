@@ -323,32 +323,35 @@
                 <p>Personaliza tu perfil y ajusta tus preferencias</p>
             </div>
             
-            <!-- Avatar -->
-            <div class="settings-card">
-                <div class="card-title">
-                    <i class="fas fa-camera"></i>
-                    Foto de Perfil
-                </div>
-                
-                <div class="avatar-section">
-                    <div class="avatar-preview" onclick="document.getElementById('avatarInput').click()">
-                        <img id="avatarPreview" src="/uploads/avatars/<%= user.avatar || 'default.png' %>" alt="Avatar" onerror="this.src='/uploads/avatars/default.png'">
-                        <div class="avatar-overlay">
-                            <i class="fas fa-camera"></i>
-                        </div>
-                    </div>
-                    
-                    <div class="avatar-info">
-                        <h3>Avatar Personalizado</h3>
-                        <p>Formatos permitidos: JPG, PNG, GIF, WebP<br>Tamaño máximo: 5MB</p>
-                        <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;" onchange="uploadAvatar()">
-                        <button class="btn btn-primary" onclick="document.getElementById('avatarInput').click()">
-                            <i class="fas fa-upload"></i> Subir Nueva Foto
-                        </button>
-                    </div>
-                </div>
-                <div class="message" id="avatarMessage"></div>
+<!-- Avatar -->
+<div class="settings-card">
+    <div class="card-title">
+        <i class="fas fa-camera"></i>
+        Foto de Perfil
+    </div>
+    
+    <div class="avatar-section">
+        <div class="avatar-preview" onclick="document.getElementById('avatarInput').click()">
+            <img id="avatarPreview" 
+                 src="<%= user.avatar || '/uploads/avatars/default.png' %>" 
+                 alt="Avatar" 
+                 onerror="this.src='/uploads/avatars/default.png'">
+            <div class="avatar-overlay">
+                <i class="fas fa-camera"></i>
             </div>
+        </div>
+        
+        <div class="avatar-info">
+            <h3>Avatar Personalizado</h3>
+            <p>Formatos: JPG, PNG, GIF, WebP. Máx: 5MB</p>
+            <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;" onchange="uploadAvatar()">
+            <button class="btn btn-primary" onclick="document.getElementById('avatarInput').click()">
+                <i class="fas fa-upload"></i> Subir Nueva Foto
+            </button>
+        </div>
+    </div>
+    <div class="message" id="avatarMessage"></div>
+</div>
             
             <!-- Nombre de Usuario -->
             <div class="settings-card">
