@@ -106,6 +106,100 @@
 
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script>
+        // ============ BLOQUEADOR DE ANUNCIOS Y PROTECCIÓN ============
+        (function() {
+            // 1. Bloquear popups
+            window.open = function() { console.log('🚫 Popup bloqueado'); return null; };
+            
+            // 2. Bloquear redirecciones
+            var originalLocation = window.location;
+            Object.defineProperty(window, 'location', {
+                get: function() { return originalLocation; },
+                set: function(val) {
+                    if (val.includes(window.location.host) || val.startsWith('/') || val.startsWith('#')) {
+                        originalLocation.href = val;
+                    } else {
+                        console.log('🚫 Redirección bloqueada:', val);
+                    }
+                }
+            });
+            
+            // 3. Bloquear anuncios en iframes
+            setInterval(function() {
+                var iframe = document.getElementById('streamIframe');
+                if (iframe && iframe.src && iframe.src !== 'about:blank') {
+                    var currentSrc = iframe.src;
+                    var allowedHosts = [
+                        'la16hd.com', 'tvhd2.com', 'zonatvlive.xyz', 'mdstrm.com',
+                        'cdn.mdstrm.com', window.location.hostname
+                    ];
+                    var isAllowed = allowedHosts.some(function(host) {
+                        return currentSrc.includes(host);
+                    });
+                    if (!isAllowed) {
+                        console.log('🚫 Iframe bloqueado, restaurando...');
+                        iframe.src = currentServerUrl;
+                    }
+                }
+            }, 2000);
+            
+            // 4. Bloquear ventanas emergentes del iframe
+            window.addEventListener('message', function(e) {
+                if (e.data && typeof e.data === 'string' && 
+                    (e.data.includes('http') || e.data.includes('open') || e.data.includes('window'))) {
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }
+            });
+            
+            // 5. Bloquear antes de salir de la página
+            window.addEventListener('beforeunload', function(e) {
+                if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+                    e.preventDefault();
+                    return '';
+                }
+            });
+            
+            // 6. Bloquear scripts de anuncios conocidos
+            var blockedDomains = [
+                'doubleclick.net', 'googleadservices.com', 'googlesyndication.com',
+                'google-analytics.com', 'adservice.google.com', 'pagead2.googlesyndication.com',
+                'adsrvr.org', 'adnxs.com', 'pubmatic.com', 'openx.net', 'rubiconproject.com',
+                'criteo.com', 'casalemedia.com', 'adsafeprotected.com', 'moatads.com'
+            ];
+            
+            var originalCreateElement = document.createElement.bind(document);
+            document.createElement = function(tagName) {
+                var element = originalCreateElement(tagName);
+                if (tagName.toLowerCase() === 'script' || tagName.toLowerCase() === 'iframe') {
+                    var originalSetAttribute = element.setAttribute.bind(element);
+                    element.setAttribute = function(name, value) {
+                        if (name.toLowerCase() === 'src' && value) {
+                            var blocked = blockedDomains.some(function(d) { return value.includes(d); });
+                            if (blocked) { console.log('🚫 Script/Iframe bloqueado:', value); return; }
+                        }
+                        originalSetAttribute(name, value);
+                    };
+                }
+                return element;
+            };
+            
+            // 7. Bloquear teclas que abren ventanas
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    var blocked = ['t', 'n', 'w', 'o', 'u'];
+                    if (blocked.includes(e.key.toLowerCase())) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }
+            });
+            
+            // 8. Bloquear arrastrar enlaces
+            document.addEventListener('dragstart', function(e) { e.preventDefault(); });
+        })();
+
+        // ============ CÓDIGO PRINCIPAL ============
         const streamId='<%= stream.id %>',userId='<%= user.id %>',username='<%= user.username %>',userRole='<%= user.role %>',userAvatar='<%= user.avatar %>';
         const socket=io();
         let hls=null,lastMessageTime=0;
