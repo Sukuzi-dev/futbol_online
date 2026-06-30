@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title><%= stream.name %> - Futbol Online</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -11,221 +11,132 @@
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; overflow: hidden; font-family: 'Poppins', sans-serif; background: #000; color: white; }
+        html, body { height: 100%; width: 100%; overflow: hidden; font-family: 'Poppins', sans-serif; background: #000; color: white; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
         body { display: flex; }
-        .main-wrapper { flex: 1; display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; height: 100vh; height: 100dvh; width: 100%; overflow: hidden; }
         
-        .stream-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: rgba(15,15,26,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.06); z-index: 50; flex-shrink: 0; gap: 8px; }
-        .stream-header-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
-        .back-btn { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; text-decoration: none; font-size: 14px; flex-shrink: 0; }
-        .back-btn:hover { background: rgba(255,255,255,0.1); }
+        .stream-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(15,15,26,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.06); z-index: 50; flex-shrink: 0; gap: 6px; min-height: 44px; }
+        .stream-header-left { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+        .back-btn { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 14px; flex-shrink: 0; }
         .live-badge { background: #ea4335; color: white; padding: 3px 8px; border-radius: 20px; font-size: 9px; font-weight: 700; display: flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; }
         .live-dot { width: 6px; height: 6px; background: white; border-radius: 50%; }
-        .stream-name-header { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .server-selector { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px 8px; max-width: 180px; }
-        .server-selector i { color: #667eea; font-size: 12px; }
-        .server-selector select { background: transparent; border: none; color: white; font-family: 'Poppins', sans-serif; font-size: 11px; cursor: pointer; outline: none; flex: 1; min-width: 0; }
+        .stream-name-header { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .server-selector { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 3px 6px; max-width: 150px; }
+        .server-selector i { color: #667eea; font-size: 10px; }
+        .server-selector select { background: transparent; border: none; color: white; font-family: 'Poppins', sans-serif; font-size: 10px; cursor: pointer; outline: none; flex: 1; min-width: 0; }
         .server-selector select option { background: #1a1a2e; color: white; }
         .stream-header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-        .viewers-badge { background: rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 20px; font-size: 11px; display: flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
-        .viewers-badge i { color: #34a853; font-size: 10px; }
+        .viewers-badge { background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 20px; font-size: 10px; display: flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
+        .viewers-badge i { color: #34a853; font-size: 9px; }
         .viewers-count-number { font-weight: 700; color: #34a853; }
-        .mobile-server-btn { display: none; background: rgba(102,126,234,0.2); border: 1px solid #667eea; color: white; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 10px; white-space: nowrap; }
+        .mobile-server-btn { display: none; background: rgba(102,126,234,0.2); border: 1px solid #667eea; color: white; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-family: 'Poppins', sans-serif; font-size: 9px; white-space: nowrap; }
         
-        .stream-content { flex: 1; display: flex; overflow: hidden; min-height: 0; }
-        
-        /* ============ REPRODUCTOR PERSONALIZADO ============ */
+        .stream-content { flex: 1; display: flex; overflow: hidden; min-height: 0; width: 100%; }
         .video-container { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; position: relative; min-width: 0; overflow: hidden; }
-        
-        .player-wrapper { width: 100%; height: 100%; position: relative; }
-        
+        .player-wrapper { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: #000; }
+        .player-wrapper video { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; }
         .player-wrapper iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; }
-        .player-wrapper video { width: 100%; height: 100%; object-fit: contain; }
         
-        /* CAPA PROTECTORA TRANSPARENTE - Bloquea clicks en el iframe */
-        .click-shield {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 10;
-            background: transparent;
-            cursor: default;
-        }
+        .click-shield { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: transparent; cursor: default; }
         
-        /* BARRA DE CONTROL PERSONALIZADA */
-        .custom-controls {
-            position: absolute;
-            bottom: 0; left: 0;
-            width: 100%;
-            background: linear-gradient(transparent, rgba(0,0,0,0.9));
-            padding: 30px 15px 10px;
-            z-index: 20;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            opacity: 1;
-            transition: opacity 0.3s;
-        }
-        
+        .custom-controls { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.95)); padding: 25px 12px 8px; z-index: 20; display: flex; align-items: center; gap: 8px; opacity: 1; transition: opacity 0.3s; min-height: 44px; }
         .custom-controls.hidden { opacity: 0; pointer-events: none; }
-        
-        .control-btn {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 18px;
-            width: 36px; height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-        .control-btn:hover { color: #667eea; transform: scale(1.1); }
-        
-        .volume-container {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .volume-slider {
-            width: 80px;
-            height: 4px;
-            -webkit-appearance: none;
-            appearance: none;
-            background: rgba(255,255,255,0.3);
-            border-radius: 2px;
-            outline: none;
-            cursor: pointer;
-        }
-        .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 14px; height: 14px;
-            border-radius: 50%;
-            background: #667eea;
-            cursor: pointer;
-        }
-        
+        .control-btn { background: none; border: none; color: white; cursor: pointer; font-size: 16px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+        .control-btn:active { color: #667eea; transform: scale(0.9); }
+        .volume-container { display: flex; align-items: center; gap: 2px; }
+        .volume-slider { width: 70px; height: 4px; -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.3); border-radius: 2px; outline: none; cursor: pointer; }
+        .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #667eea; cursor: pointer; }
         .fullscreen-btn { margin-left: auto; }
         
-        .server-change-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 30; flex-direction: column; gap: 15px; }
+        .server-change-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 30; flex-direction: column; gap: 12px; }
         .server-change-overlay.active { display: flex; }
-        .server-change-spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .server-change-spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .server-change-text { color: #aaa; font-size: 13px; }
+        .server-change-text { color: #aaa; font-size: 12px; }
         
-        /* CHAT */
-        .chat-sidebar { width: 360px; background: #0f0f1a; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; flex-shrink: 0; height: 100%; }
-        .chat-header { padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 6px; flex-wrap: wrap; }
-        .chat-header h3 { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; margin: 0; }
-        .chat-header h3 i { color: #34a853; font-size: 8px; }
-        .chat-server-name { font-size: 10px; color: #667eea; background: rgba(102,126,234,0.1); padding: 2px 8px; border-radius: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
-        .chat-online-count { font-size: 10px; color: #888; white-space: nowrap; }
-        
-        .chat-messages { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 0; -webkit-overflow-scrolling: touch; }
-        .chat-messages::-webkit-scrollbar { width: 4px; }
+        .chat-sidebar { width: 340px; background: #0f0f1a; border-left: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; flex-shrink: 0; height: 100%; }
+        .chat-header { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 4px; flex-wrap: wrap; min-height: 40px; }
+        .chat-header h3 { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; margin: 0; }
+        .chat-header h3 i { color: #34a853; font-size: 7px; }
+        .chat-server-name { font-size: 9px; color: #667eea; background: rgba(102,126,234,0.1); padding: 2px 6px; border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px; }
+        .chat-online-count { font-size: 9px; color: #888; white-space: nowrap; }
+        .chat-messages { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 8px; display: flex; flex-direction: column; gap: 6px; min-height: 0; -webkit-overflow-scrolling: touch; }
+        .chat-messages::-webkit-scrollbar { width: 3px; }
         .chat-messages::-webkit-scrollbar-track { background: transparent; }
         .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
-        .chat-message { display: flex; gap: 8px; flex-shrink: 0; }
-        .message-avatar { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #667eea; object-fit: cover; flex-shrink: 0; }
+        .chat-message { display: flex; gap: 6px; flex-shrink: 0; }
+        .message-avatar { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #667eea; object-fit: cover; flex-shrink: 0; }
         .message-content { flex: 1; min-width: 0; }
-        .message-header { display: flex; align-items: center; gap: 4px; margin-bottom: 1px; flex-wrap: wrap; }
-        .message-username { font-weight: 600; font-size: 11px; }
-        .role-badge-mini { padding: 1px 5px; border-radius: 3px; font-size: 7px; font-weight: 700; text-transform: uppercase; flex-shrink: 0; }
+        .message-header { display: flex; align-items: center; gap: 3px; margin-bottom: 1px; flex-wrap: wrap; }
+        .message-username { font-weight: 600; font-size: 10px; }
+        .role-badge-mini { padding: 1px 4px; border-radius: 3px; font-size: 6px; font-weight: 700; text-transform: uppercase; flex-shrink: 0; }
         .role-owner { background: #ffd700; color: #000; }
         .role-admin { background: #ea4335; color: white; }
         .role-user { background: #4a90e2; color: white; }
-        .message-text { font-size: 11px; color: #ddd; line-height: 1.4; word-break: break-word; }
-        .message-time { font-size: 8px; color: #555; margin-left: auto; flex-shrink: 0; }
+        .message-text { font-size: 10px; color: #ddd; line-height: 1.4; word-break: break-word; }
+        .message-time { font-size: 7px; color: #555; margin-left: auto; flex-shrink: 0; }
         
-        .chat-input-container { padding: 8px 10px; border-top: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; background: #0f0f1a; }
+        .chat-input-container { padding: 6px 8px; border-top: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; background: #0f0f1a; }
         .chat-input-wrapper { display: flex; gap: 6px; align-items: center; }
-        .chat-input { flex: 1; padding: 8px 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; color: white; font-size: 11px; font-family: 'Poppins',sans-serif; transition: all 0.3s; min-width: 0; }
+        .chat-input { flex: 1; padding: 8px 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; color: white; font-size: 11px; font-family: 'Poppins',sans-serif; transition: all 0.3s; min-width: 0; -webkit-appearance: none; }
         .chat-input:focus { outline: none; border-color: #667eea; background: rgba(255,255,255,0.1); }
         .chat-input::placeholder { color: #555; }
-        .chat-send-btn { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); border: none; color: white; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
-        .chat-send-btn:hover { transform: scale(1.05); }
-        .chat-send-btn:active { transform: scale(0.95); }
+        .chat-send-btn { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+        .chat-send-btn:active { transform: scale(0.9); }
         
-        .servers-panel { display: none; position: fixed; bottom: 0; left: 0; width: 100%; max-height: 55vh; background: rgba(15,15,26,0.98); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); border-radius: 16px 16px 0 0; z-index: 200; overflow-y: auto; padding: 15px; }
+        .servers-panel { display: none; position: fixed; bottom: 0; left: 0; width: 100%; max-height: 50vh; background: rgba(15,15,26,0.98); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); border-radius: 14px 14px 0 0; z-index: 200; overflow-y: auto; padding: 12px; -webkit-overflow-scrolling: touch; }
         .servers-panel.active { display: block; }
-        .servers-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .servers-panel-header h3 { font-size: 14px; display: flex; align-items: center; gap: 6px; }
-        .servers-panel-close { background: rgba(255,255,255,0.1); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 12px; }
-        .server-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; color: white; cursor: pointer; margin-bottom: 6px; transition: all 0.3s; font-family: 'Poppins', sans-serif; font-size: 12px; text-align: left; }
-        .server-btn:hover { background: rgba(102,126,234,0.15); border-color: #667eea; }
+        .servers-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .servers-panel-header h3 { font-size: 13px; display: flex; align-items: center; gap: 4px; }
+        .servers-panel-close { background: rgba(255,255,255,0.1); border: none; color: white; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 11px; }
+        .server-btn { display: flex; align-items: center; gap: 6px; width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: white; cursor: pointer; margin-bottom: 5px; font-family: 'Poppins', sans-serif; font-size: 11px; text-align: left; -webkit-tap-highlight-color: transparent; }
+        .server-btn:active { background: rgba(102,126,234,0.2); }
         .server-btn.active { background: rgba(102,126,234,0.2); border-color: #667eea; }
-        .server-btn i { color: #667eea; font-size: 12px; }
+        .server-btn i { color: #667eea; font-size: 11px; }
         .servers-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 199; }
         .servers-overlay.active { display: block; }
         
-        @media (max-width: 1024px) { .stream-content { flex-direction: column; } .video-container { height: 45vh; flex: none; } .chat-sidebar { width: 100%; flex: 1; min-height: 200px; } .server-selector { display: none; } .mobile-server-btn { display: block; } .chat-input-container { position: sticky; bottom: 0; } .volume-slider { width: 60px; } }
-        @media (max-width: 768px) { .stream-header { padding: 6px 10px; } .video-container { height: 35vh; } .chat-sidebar { min-height: 250px; } .custom-controls { padding: 20px 10px 8px; } .control-btn { font-size: 16px; width: 30px; height: 30px; } }
-        @media (max-width: 480px) { .video-container { height: 30vh; } .chat-sidebar { min-height: 300px; } .chat-input { font-size: 16px; } }
+        @media (min-width: 1025px) { .control-btn:hover { color: #667eea; transform: scale(1.1); } .chat-send-btn:hover { transform: scale(1.1); } }
+        @media (max-width: 1024px) { .stream-content { flex-direction: column; } .video-container { height: 45vh; flex: none; min-height: 200px; } .chat-sidebar { width: 100%; flex: 1; min-height: 250px; } .server-selector { display: none; } .mobile-server-btn { display: block; } .chat-input-container { position: sticky; bottom: 0; } }
+        @media (max-width: 768px) { .stream-header { padding: 6px 8px; min-height: 40px; } .video-container { height: 35vh; min-height: 180px; } .custom-controls { padding: 20px 8px 6px; } .control-btn { font-size: 14px; width: 30px; height: 30px; } .volume-slider { width: 50px; } .viewers-badge span:last-child { display: none; } }
+        @media (max-width: 480px) { .video-container { height: 30vh; min-height: 160px; } .chat-sidebar { min-height: 250px; } .chat-input { font-size: 16px; } .chat-send-btn { width: 36px; height: 36px; } }
     </style>
 </head>
 <body>
     <div class="main-wrapper">
         <header class="stream-header">
-            <div class="stream-header-left">
-                <a href="/dashboard" class="back-btn"><i class="fas fa-arrow-left"></i></a>
-                <div class="live-badge"><span class="live-dot"></span> DIRECTO</div>
-                <span class="stream-name-header"><%= stream.name %></span>
-                <div class="server-selector"><i class="fas fa-server"></i><select id="serverSelect" onchange="changeServer()"><option value="">Cargando...</option></select></div>
-                <button class="mobile-server-btn" onclick="openServersPanel()"><i class="fas fa-list"></i> Servidores</button>
-            </div>
+            <div class="stream-header-left"><a href="/dashboard" class="back-btn"><i class="fas fa-arrow-left"></i></a><div class="live-badge"><span class="live-dot"></span> DIRECTO</div><span class="stream-name-header"><%= stream.name %></span><div class="server-selector"><i class="fas fa-server"></i><select id="serverSelect" onchange="changeServer()"><option value="">Cargando...</option></select></div><button class="mobile-server-btn" onclick="openServersPanel()"><i class="fas fa-list"></i> Servidores</button></div>
             <div class="stream-header-right"><div class="viewers-badge"><i class="fas fa-eye"></i> <span class="viewers-count-number" id="viewerCount">0</span> <span>espectadores</span></div></div>
         </header>
-        
         <div class="stream-content">
-            <!-- ============ REPRODUCTOR PERSONALIZADO ============ -->
             <div class="video-container" id="videoContainer">
                 <div class="server-change-overlay active" id="serverChangeOverlay"><div class="server-change-spinner"></div><p class="server-change-text">Cargando transmisión...</p></div>
-                
-                <div class="player-wrapper" id="playerWrapper">
-                    <!-- Video/Iframe se inserta aquí -->
-                </div>
-                
-                <!-- CAPA PROTECTORA - Bloquea clicks -->
+                <div class="player-wrapper" id="playerWrapper"></div>
                 <div class="click-shield" id="clickShield"></div>
-                
-                <!-- BARRA DE CONTROL PERSONALIZADA -->
                 <div class="custom-controls" id="customControls">
                     <button class="control-btn" id="playPauseBtn" onclick="togglePlay()"><i class="fas fa-play"></i></button>
-                    <div class="volume-container">
-                        <button class="control-btn" id="volumeBtn" onclick="toggleMute()"><i class="fas fa-volume-up"></i></button>
-                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" oninput="changeVolume(this.value)">
-                    </div>
+                    <div class="volume-container"><button class="control-btn" id="volumeBtn" onclick="toggleMute()"><i class="fas fa-volume-up"></i></button><input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" oninput="changeVolume(this.value)"></div>
                     <button class="control-btn fullscreen-btn" onclick="toggleFullscreen()"><i class="fas fa-expand"></i></button>
                 </div>
             </div>
-            
-            <!-- CHAT -->
             <div class="chat-sidebar">
                 <div class="chat-header"><h3><i class="fas fa-circle"></i> Chat</h3><span class="chat-server-name" id="chatServerName">Principal</span><span class="chat-online-count" id="chatOnlineCount">0</span></div>
-                <div class="chat-messages" id="chatMessages"><div style="text-align:center;padding:30px;color:#555;"><i class="fas fa-comments" style="font-size:30px;display:block;margin-bottom:8px;opacity:0.3;"></i><p style="font-size:11px;">Sé el primero en comentar</p></div></div>
+                <div class="chat-messages" id="chatMessages"><div style="text-align:center;padding:25px;color:#555;"><i class="fas fa-comments" style="font-size:28px;display:block;margin-bottom:6px;opacity:0.3;"></i><p style="font-size:10px;">Sé el primero en comentar</p></div></div>
                 <div class="chat-input-container"><div class="chat-input-wrapper"><input type="text" id="chatInput" class="chat-input" placeholder="Escribe un mensaje..." maxlength="200" autocomplete="off"><button class="chat-send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button></div></div>
             </div>
         </div>
     </div>
-    
     <div class="servers-overlay" id="serversOverlay" onclick="closeServersPanel()"></div>
     <div class="servers-panel" id="serversPanel"><div class="servers-panel-header"><h3><i class="fas fa-server"></i> Servidores</h3><button class="servers-panel-close" onclick="closeServersPanel()"><i class="fas fa-times"></i></button></div><div id="serversList"></div></div>
 
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
     <script>
-        const streamId = '<%= stream.id %>';
-        const userId = '<%= user.id %>';
-        const username = '<%= user.username %>';
-        const userRole = '<%= user.role %>';
-        const userAvatar = '<%= user.avatar %>';
+        const streamId = '<%= stream.id %>', userId = '<%= user.id %>', username = '<%= user.username %>', userRole = '<%= user.role %>', userAvatar = '<%= user.avatar %>';
         const socket = io();
-        let player = null, hls = null, lastMessageTime = 0;
+        let hls = null, lastMessageTime = 0, currentVolume = 100, isMuted = false, isPlaying = false;
         const streamUrl = '<%- stream.url %>';
         let currentServerUrl = streamUrl, currentServerName = 'Principal';
-        let currentVolume = 100, isMuted = false, isPlaying = false;
+        let currentMedia = null;
 
         const servers = [
             { server: "Servidor Principal", code: streamUrl },
@@ -255,141 +166,134 @@
         }
         populateServerSelectors();
 
-        // ============ CONTROLES PERSONALIZADOS ============
-        function togglePlay() {
-            const media = getMediaElement();
+        // ============ OBTENER ELEMENTO MULTIMEDIA (BUSCA EN IFRAME) ============
+        function findMedia() {
+            // Buscar video directo
+            let v = document.getElementById('videoPlayer');
+            if (v) { currentMedia = v; return v; }
+            // Buscar dentro del iframe
+            const iframe = document.getElementById('streamIframe');
+            if (iframe) {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    v = iframeDoc.querySelector('video');
+                    if (v) { currentMedia = v; return v; }
+                } catch(e) {}
+            }
+            return null;
+        }
+
+        // Sincronizar eventos del video
+        function syncMediaEvents(media) {
             if (!media) return;
-            if (isPlaying) { media.pause(); } else { media.play().catch(() => {}); }
-            isPlaying = !isPlaying;
+            media.addEventListener('play', () => { isPlaying = true; updatePlayButton(); });
+            media.addEventListener('pause', () => { isPlaying = false; updatePlayButton(); });
+            media.addEventListener('volumechange', () => {
+                currentVolume = Math.round(media.volume * 100);
+                document.getElementById('volumeSlider').value = isMuted ? 0 : currentVolume;
+            });
+            currentMedia = media;
+        }
+
+        // ============ CONTROLES CONECTADOS ============
+        function togglePlay() {
+            const media = findMedia();
+            if (!media) return;
+            if (media.paused) { media.play().catch(() => {}); isPlaying = true; }
+            else { media.pause(); isPlaying = false; }
             updatePlayButton();
         }
 
         function toggleMute() {
-            const media = getMediaElement();
+            const media = findMedia();
             if (!media) return;
             isMuted = !isMuted;
             media.muted = isMuted;
-            document.getElementById('volumeBtn').innerHTML = isMuted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-            if (!isMuted) { media.volume = currentVolume / 100; }
+            document.getElementById('volumeBtn').innerHTML = isMuted ? '<i class="fas fa-volume-mute"></i>' : currentVolume == 0 ? '<i class="fas fa-volume-mute"></i>' : currentVolume < 50 ? '<i class="fas fa-volume-down"></i>' : '<i class="fas fa-volume-up"></i>';
+            document.getElementById('volumeSlider').value = isMuted ? 0 : currentVolume;
         }
 
         function changeVolume(val) {
-            const media = getMediaElement();
+            const media = findMedia();
             currentVolume = parseInt(val);
-            if (media && !isMuted) { media.volume = currentVolume / 100; }
+            if (media) {
+                media.volume = currentVolume / 100;
+                media.muted = currentVolume === 0;
+                isMuted = currentVolume === 0;
+            }
             const btn = document.getElementById('volumeBtn');
-            if (currentVolume == 0) { btn.innerHTML = '<i class="fas fa-volume-mute"></i>'; }
+            if (currentVolume == 0 || isMuted) { btn.innerHTML = '<i class="fas fa-volume-mute"></i>'; }
             else if (currentVolume < 50) { btn.innerHTML = '<i class="fas fa-volume-down"></i>'; }
             else { btn.innerHTML = '<i class="fas fa-volume-up"></i>'; }
         }
 
         function toggleFullscreen() {
-            const container = document.getElementById('videoContainer');
-            if (!document.fullscreenElement) { container.requestFullscreen().catch(() => {}); }
-            else { document.exitFullscreen(); }
+            const c = document.getElementById('videoContainer');
+            document.fullscreenElement ? document.exitFullscreen() : c.requestFullscreen().catch(() => {});
         }
 
         function updatePlayButton() {
             document.getElementById('playPauseBtn').innerHTML = isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
         }
 
-        function getMediaElement() {
-            const video = document.getElementById('videoPlayer');
-            if (video) return video;
-            const iframe = document.getElementById('streamIframe');
-            return iframe ? iframe.contentWindow?.document?.querySelector('video') : null;
-        }
-
         // Auto-ocultar controles
         let hideTimeout;
-        document.getElementById('videoContainer').addEventListener('mousemove', function() {
-            const controls = document.getElementById('customControls');
-            controls.classList.remove('hidden');
+        const vidContainer = document.getElementById('videoContainer');
+        vidContainer.addEventListener('mousemove', showControls);
+        vidContainer.addEventListener('touchstart', showControls);
+        function showControls() {
+            const c = document.getElementById('customControls');
+            c.classList.remove('hidden');
             clearTimeout(hideTimeout);
-            hideTimeout = setTimeout(() => { controls.classList.add('hidden'); }, 3000);
-        });
+            hideTimeout = setTimeout(() => c.classList.add('hidden'), 3000);
+        }
 
         // ============ CARGAR STREAM ============
         function destroyPlayer() {
             if (hls) { hls.stopLoad(); hls.detachMedia(); hls.destroy(); hls = null; }
-            if (player) { player.pause(); player.dispose(); player = null; }
             isPlaying = false; updatePlayButton();
             document.getElementById('playerWrapper').innerHTML = '';
+            currentMedia = null;
         }
 
         function loadStream(url) {
             destroyPlayer();
             document.getElementById('serverChangeOverlay').classList.add('active');
-            
             const wrapper = document.getElementById('playerWrapper');
             
             if (url.includes('.php') || url.includes('canal.php') || url.includes('canales.php')) {
-                // Crear iframe
                 const iframe = document.createElement('iframe');
-                iframe.id = 'streamIframe';
-                iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
-                iframe.referrerPolicy = 'no-referrer';
-                iframe.src = url;
+                iframe.id = 'streamIframe'; iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture'; iframe.referrerPolicy = 'no-referrer'; iframe.src = url;
                 iframe.style.cssText = 'width:100%;height:100%;border:none;position:absolute;top:0;left:0;';
                 wrapper.appendChild(iframe);
-                
-                iframe.onload = function() {
+                iframe.onload = () => {
                     document.getElementById('serverChangeOverlay').classList.remove('active');
-                    isPlaying = true; updatePlayButton();
+                    setTimeout(() => {
+                        const media = findMedia();
+                        if (media) { syncMediaEvents(media); isPlaying = true; updatePlayButton(); }
+                    }, 2000);
                 };
-                setTimeout(() => document.getElementById('serverChangeOverlay').classList.remove('active'), 6000);
-                
+                setTimeout(() => { document.getElementById('serverChangeOverlay').classList.remove('active'); isPlaying = true; updatePlayButton(); }, 6000);
             } else if (url.endsWith('.m3u8') || url.includes('m3u8')) {
-                const video = document.createElement('video');
-                video.id = 'videoPlayer';
-                video.controls = false;
-                video.autoplay = true;
-                video.playsInline = true;
-                video.style.cssText = 'width:100%;height:100%;object-fit:contain;';
-                wrapper.appendChild(video);
-                
-                if (Hls.isSupported()) {
-                    hls = new Hls({ enableWorker: true, lowLatencyMode: true });
-                    hls.loadSource(url); hls.attachMedia(video);
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => {}); document.getElementById('serverChangeOverlay').classList.remove('active'); isPlaying = true; updatePlayButton(); });
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = url;
-                    video.addEventListener('loadedmetadata', () => { video.play(); document.getElementById('serverChangeOverlay').classList.remove('active'); isPlaying = true; updatePlayButton(); });
-                }
+                const v = document.createElement('video'); v.id = 'videoPlayer'; v.autoplay = true; v.playsInline = true; v.setAttribute('playsinline', '');
+                v.style.cssText = 'width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;';
+                wrapper.appendChild(v); syncMediaEvents(v);
+                if (Hls.isSupported()) { hls = new Hls({ enableWorker: true, lowLatencyMode: true }); hls.loadSource(url); hls.attachMedia(v); hls.on(Hls.Events.MANIFEST_PARSED, () => { v.play().catch(() => {}); document.getElementById('serverChangeOverlay').classList.remove('active'); }); }
+                else if (v.canPlayType('application/vnd.apple.mpegurl')) { v.src = url; v.addEventListener('loadedmetadata', () => { v.play(); document.getElementById('serverChangeOverlay').classList.remove('active'); }); }
             } else {
-                const video = document.createElement('video');
-                video.id = 'videoPlayer';
-                video.controls = false;
-                video.autoplay = true;
-                video.playsInline = true;
-                video.src = url;
-                video.style.cssText = 'width:100%;height:100%;object-fit:contain;';
-                wrapper.appendChild(video);
-                video.addEventListener('playing', () => { document.getElementById('serverChangeOverlay').classList.remove('active'); isPlaying = true; updatePlayButton(); });
-                setTimeout(() => document.getElementById('serverChangeOverlay').classList.remove('active'), 6000);
+                const v = document.createElement('video'); v.id = 'videoPlayer'; v.autoplay = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.src = url;
+                v.style.cssText = 'width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;';
+                wrapper.appendChild(v); syncMediaEvents(v);
+                v.addEventListener('playing', () => { document.getElementById('serverChangeOverlay').classList.remove('active'); });
+                setTimeout(() => document.getElementById('serverChangeOverlay').classList.remove('active'), 5000);
             }
         }
 
         function changeServer() { const i = document.getElementById('serverSelect').value; if (i !== '') selectServer(parseInt(i)); }
-
-        async function selectServer(index) {
-            const s = servers[index];
-            if (!s || (s.code === currentServerUrl && s.server === currentServerName)) return;
-            const prev = getCurrentServerIndex();
-            currentServerUrl = s.code; currentServerName = s.server;
-            document.getElementById('chatServerName').textContent = s.server;
-            document.getElementById('serverSelect').value = index;
-            document.querySelectorAll('.server-btn').forEach((b, i) => b.classList.toggle('active', i === index));
-            closeServersPanel();
-            socket.emit('leave-server-chat', { streamId, serverIndex: prev });
-            socket.emit('join-server-chat', { streamId, serverIndex: index });
-            await loadServerMessages(index);
-            loadStream(currentServerUrl);
-        }
-
+        async function selectServer(i) { const s = servers[i]; if (!s || (s.code === currentServerUrl && s.server === currentServerName)) return; const p = getCurrentServerIndex(); currentServerUrl = s.code; currentServerName = s.server; document.getElementById('chatServerName').textContent = s.server; document.getElementById('serverSelect').value = i; document.querySelectorAll('.server-btn').forEach((b, j) => b.classList.toggle('active', j === i)); closeServersPanel(); socket.emit('leave-server-chat', { streamId, serverIndex: p }); socket.emit('join-server-chat', { streamId, serverIndex: i }); await loadServerMessages(i); loadStream(currentServerUrl); }
         function getCurrentServerIndex() { for (let i = 0; i < servers.length; i++) { if (servers[i].server === currentServerName) return i; } return 0; }
         async function loadServerMessages(i) { if (loadedServers[i] && serverChats[i].length > 0) { displayCurrentServerChat(i); return; } try { const r = await fetch('/stream/chat/' + streamId + '?server=' + i); const m = await r.json(); if (m && m.length > 0) { serverChats[i] = m; loadedServers[i] = true; } } catch(e) {} displayCurrentServerChat(i); }
-        function displayCurrentServerChat(i) { const c = document.getElementById('chatMessages'); c.innerHTML = ''; const m = serverChats[i] || []; if (m.length > 0) m.forEach(msg => addMsg(msg)); else c.innerHTML = '<div style="text-align:center;padding:30px;color:#555;"><i class="fas fa-comments" style="font-size:30px;display:block;margin-bottom:8px;opacity:0.3;"></i><p style="font-size:11px;">Sé el primero en comentar</p></div>'; scrollChat(); }
+        function displayCurrentServerChat(i) { const c = document.getElementById('chatMessages'); c.innerHTML = ''; const m = serverChats[i] || []; if (m.length > 0) m.forEach(msg => addMsg(msg)); else c.innerHTML = '<div style="text-align:center;padding:25px;color:#555;"><i class="fas fa-comments" style="font-size:28px;display:block;margin-bottom:6px;opacity:0.3;"></i><p style="font-size:10px;">Sé el primero en comentar</p></div>'; scrollChat(); }
         function addMsg(d) { const c = document.getElementById('chatMessages'); if (c.querySelector('div[style]')) c.innerHTML = ''; const div = document.createElement('div'); div.className = 'chat-message'; const rc = 'role-' + (d.role || 'user'); const rt = (d.role || 'user').charAt(0).toUpperCase() + (d.role || 'user').slice(1); const t = d.timestamp || d.created_at ? new Date(d.timestamp || d.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }); div.innerHTML = '<img src="' + (d.avatar || '/uploads/avatars/default.png') + '" class="message-avatar" onerror="this.src=\'/uploads/avatars/default.png\'"><div class="message-content"><div class="message-header"><span class="message-username" style="color:' + getRC(d.role) + '">' + esc(d.username) + '</span><span class="role-badge-mini ' + rc + '">' + rt + '</span><span class="message-time">' + t + '</span></div><div class="message-text">' + esc(d.message || '') + '</div></div>'; c.appendChild(div); scrollChat(); }
         function getRC(r) { const o = { owner: '#ffd700', admin: '#ea4335', user: '#4a90e2' }; return o[r] || '#fff'; }
         function scrollChat() { const c = document.getElementById('chatMessages'); if (c) { c.scrollTop = c.scrollHeight; } }
@@ -405,7 +309,6 @@
         function closeServersPanel() { document.getElementById('serversPanel').classList.remove('active'); document.getElementById('serversOverlay').classList.remove('active'); }
         function esc(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
-        // Iniciar
         currentServerName = servers[0].server;
         document.getElementById('chatServerName').textContent = currentServerName;
         loadStream(streamUrl);
