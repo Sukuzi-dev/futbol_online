@@ -273,6 +273,11 @@
     }
 </style>
 
+<img src="<%= user.avatar ? user.avatar + '?t=' + Date.now() : '/uploads/avatars/default.png' %>" 
+     class="sidebar-avatar" 
+     alt="<%= user.username %>"
+     onerror="this.src='/uploads/avatars/default.png'">
+
 <!-- Overlay oscuro -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
