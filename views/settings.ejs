@@ -435,56 +435,82 @@
             charCount.textContent = `${this.value.length}/10 caracteres`;
         });
         
-        // ============ AVATAR ============
-        async function uploadAvatar() {
-            const fileInput = document.getElementById('avatarInput');
-            const file = fileInput.files[0];
-            
-            if (!file) return;
-            
-            // Validar tamaño
-            if (file.size > 5 * 1024 * 1024) {
-                showMessage('avatar', false, 'El archivo no debe superar los 5MB');
-                return;
-            }
-            
-            // Validar tipo
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if (!allowedTypes.includes(file.type)) {
-                showMessage('avatar', false, 'Formato no permitido. Usa JPG, PNG, GIF o WebP');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('avatar', file);
-            
-            try {
-                const response = await fetch('/settings/avatar', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                showMessage('avatar', data.success, data.message);
-                
-                if (data.success) {
-                    document.getElementById('avatarPreview').src = '/uploads/avatars/' + data.avatar + '?t=' + Date.now();
-                    // Actualizar avatares en sidebar y header
-                    updateAllAvatars(data.avatar);
-                }
-            } catch (error) {
-                showMessage('avatar', false, 'Error al subir la imagen');
-            }
-            
-            fileInput.value = '';
-        }
+// ============ AVATAR ============
+async function uploadAvatar() {
+    const fileInput = document.getElementById('avatarInput');
+    const file = fileInput.files[0];
+    
+    if (!file) return;
+    
+    // Validar tamaño
+    if (file.size > 5 * 1024 * 1024) {
+        showMessage('avatar', false, 'El archivo no debe superar los 5MB');
+        return;
+    }
+    
+    // Validar tipo
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        showMessage('avatar', false, 'Formato no permitido. Usa JPG, PNG, GIF o WebP');
+        return;
+    }
+    
+    // Mostrar preview inmediatamente (antes de subir)
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('avatarPreview').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    
+    // Subir al servidor
+    const formData = new FormData();
+    formData.append('avatar', file);
+    
+    try {
+        const response = await fetch('/settings/avatar', {
+            method: 'POST',
+            body: formData
+        });
         
-        function updateAllAvatars(avatar) {
-            const avatars = document.querySelectorAll('.sidebar-avatar, .user-avatar-header');
-            avatars.forEach(img => {
-                img.src = '/uploads/avatars/' + avatar + '?t=' + Date.now();
-            });
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage('avatar', true, data.message);
+            
+            // Actualizar TODOS los avatares de la página
+            const newAvatar = data.avatar + '?t=' + Date.now();
+            document.getElementById('avatarPreview').src = newAvatar;
+            
+            // Actualizar avatar en sidebar
+            const sidebarAvatar = document.querySelector('.sidebar-avatar');
+            if (sidebarAvatar) sidebarAvatar.src = newAvatar;
+            
+            // Actualizar avatar en header
+            const headerAvatar = document.querySelector('.user-avatar-header');
+            if (headerAvatar) headerAvatar.src = newAvatar;
+            
+        } else {
+            showMessage('avatar', false, data.message);
+            // Restaurar avatar anterior si falla
+            document.getElementById('avatarPreview').src = '<%= user.avatar || "/uploads/avatars/default.png" %>';
         }
+    } catch (error) {
+        showMessage('avatar', false, 'Error al subir la imagen');
+        document.getElementById('avatarPreview').src = '<%= user.avatar || "/uploads/avatars/default.png" %>';
+    }
+    
+    fileInput.value = '';
+}
+
+function showMessage(section, success, message) {
+    const msgEl = document.getElementById(section + 'Message');
+    if (msgEl) {
+        const icon = success ? '✅' : '❌';
+        msgEl.innerHTML = '<i class="fas ' + (success ? 'fa-check-circle' : 'fa-exclamation-circle') + '"></i> ' + message;
+        msgEl.className = 'message ' + (success ? 'success' : 'error') + ' show';
+        setTimeout(() => { msgEl.classList.remove('show'); }, 4000);
+    }
+}
         
         // ============ NOMBRE DE USUARIO ============
         async function updateUsername() {
