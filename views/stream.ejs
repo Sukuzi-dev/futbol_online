@@ -153,6 +153,84 @@
         };
     })();
 
+// ============ MINI BLOQUEADOR DE ANUNCIOS MEJORADO ============
+(function() {
+    // Lista de dominios de anuncios
+    var adDomains = [
+        'doubleclick.net', 'app.unblock-vpn.com', 'googleadservices.com', 'googlesyndication.com',
+        'googletagmanager.com', 'google-analytics.com', 'adservice.google.com',
+        'pagead2.googlesyndication.com', 'adsrvr.org', 'adnxs.com',
+        'pubmatic.com', 'openx.net', 'rubiconproject.com', 'criteo.com',
+        'casalemedia.com', 'adsafeprotected.com', 'moatads.com',
+        'advertising.com', 'adtech.com', 'bidvertiser.com', 'popads.net',
+        'popcash.net', 'propellerads.com', 'exoclick.com', 'trafficjunky.com',
+        'juicyads.com', 'clickaine.com', 'adsterra.com', 'galaksion.com'
+    ];
+    
+    // Bloquear popups
+    window.open = function() { console.log('🚫 Popup bloqueado'); return null; };
+    
+    // Bloquear scripts de anuncios
+    var origCE = document.createElement.bind(document);
+    document.createElement = function(tag) {
+        var el = origCE(tag);
+        if (tag.toLowerCase() === 'script' || tag.toLowerCase() === 'iframe') {
+            var origSA = el.setAttribute.bind(el);
+            el.setAttribute = function(name, value) {
+                if (name.toLowerCase() === 'src' && value) {
+                    var esAnuncio = adDomains.some(function(d) { return value.includes(d); });
+                    if (esAnuncio) { console.log('🚫 Anuncio bloqueado'); return; }
+                }
+                origSA(name, value);
+            };
+        }
+        return el;
+    };
+    
+    // Monitorear iframe y eliminar anuncios
+    setInterval(function() {
+        // Eliminar iframes de anuncios
+        var iframes = document.querySelectorAll('iframe');
+        iframes.forEach(function(iframe) {
+            if (iframe.id !== 'streamIframe') {
+                var src = iframe.src || '';
+                var esAnuncio = adDomains.some(function(d) { return src.includes(d); });
+                if (esAnuncio || (iframe.style.display !== 'none' && iframe.offsetHeight < 10 && iframe.offsetWidth < 10)) {
+                    iframe.remove();
+                    console.log('🚫 Iframe de anuncio eliminado');
+                }
+            }
+        });
+        
+        // Eliminar divs de anuncios comunes
+        var adSelectors = [
+            '[id*="google_ads"]', '[class*="google_ads"]', '[id*="advert"]', 
+            '[class*="advert"]', '[id*="banner"]', '[class*="banner-ad"]',
+            '[id*="popup"]', '[class*="popup"]', 'ins.adsbygoogle'
+        ];
+        adSelectors.forEach(function(sel) {
+            try {
+                var ads = document.querySelectorAll(sel);
+                ads.forEach(function(ad) { if (!ad.closest('#chatMessages')) ad.remove(); });
+            } catch(e) {}
+        });
+    }, 3000);
+    
+    // Bloquear alert() y confirm() (usados por anuncios)
+    var origAlert = window.alert;
+    window.alert = function(msg) {
+        if (msg && (msg.includes('ad') || msg.includes('win') || msg.includes('prize'))) {
+            console.log('🚫 Alert bloqueado');
+            return;
+        }
+        origAlert(msg);
+    };
+    
+    console.log('🛡️ Bloqueador de anuncios activado');
+})();
+
+
+
     // ============ CÓDIGO PRINCIPAL ============
     const streamId='<%= stream.id %>',userId='<%= user.id %>',username='<%= user.username %>',userRole='<%= user.role %>',userAvatar='<%= user.avatar %>';
     const socket=io();
