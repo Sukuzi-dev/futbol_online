@@ -22,7 +22,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 5 * 1024 * 1024, files: 1 },
     fileFilter: function (req, file, cb) {
         const allowedTypes = /jpeg|jpg|png|gif|webp/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -65,26 +65,27 @@ router.get('/', async (req, res) => {
 // Subir avatar
 router.post('/avatar', upload.single('avatar'), async (req, res) => {
     try {
-        if (!req.file) return res.json({ success: false, message: 'No se seleccionó archivo' });
-        
-        const avatarPath = req.file.filename;
-        const userId = req.session.user.id;
-        
-        const [users] = await pool.query('SELECT avatar FROM users WHERE id = ?', [userId]);
-        const oldAvatar = users[0].avatar;
-        
-        await pool.query('UPDATE users SET avatar = ? WHERE id = ?', [avatarPath, userId]);
-        req.session.user.avatar = avatarPath;
-        
-        if (oldAvatar && oldAvatar !== 'default.png') {
-            const fs = require('fs');
-            const oldPath = path.join(__dirname, '../public/uploads/avatars', oldAvatar);
-            fs.unlink(oldPath, () => {});
+        if (!req.file) {
+            return res.json({ success: false, message: 'No se seleccionó archivo' });
         }
-        
-        res.json({ success: true, message: 'Avatar actualizado', avatar: avatarPath });
+
+        // La URL de la imagen en R2
+        const avatarUrl = req.file.location; // URL pública de R2
+
+        // Guardar URL en base de datos
+        await pool.query('UPDATE users SET avatar = ? WHERE id = ?', 
+            [avatarUrl, req.session.user.id]);
+
+        // Actualizar sesión
+        req.session.user.avatar = avatarUrl;
+
+        res.json({ 
+            success: true, 
+            message: 'Avatar actualizado', 
+            avatar: avatarUrl 
+        });
     } catch (error) {
-        console.error('Error al subir avatar:', error);
+        console.error('Error:', error);
         res.json({ success: false, message: 'Error al subir imagen' });
     }
 });
