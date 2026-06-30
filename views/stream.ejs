@@ -100,318 +100,180 @@
                 <a href="/dashboard" class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i></a>
                 <div class="live-badge"><span class="live-dot"></span> DIRECTO</div>
                 <span class="stream-name-header"><%= stream.name %></span>
-                <div class="server-selector" id="desktopServerSelector">
-                    <i class="fas fa-server"></i>
-                    <select id="serverSelect" onchange="changeServer()"><option value="">Cargando...</option></select>
-                </div>
+                <div class="server-selector" id="desktopServerSelector"><i class="fas fa-server"></i><select id="serverSelect" onchange="changeServer()"><option value="">Cargando...</option></select></div>
                 <button class="mobile-server-btn" onclick="openServersPanel()"><i class="fas fa-list"></i> Servidores</button>
             </div>
-            <div class="stream-header-right">
-                <div class="viewers-badge"><i class="fas fa-eye"></i> <span class="viewers-count-number" id="viewerCount">0</span> <span>espectadores</span></div>
-            </div>
+            <div class="stream-header-right"><div class="viewers-badge"><i class="fas fa-eye"></i> <span class="viewers-count-number" id="viewerCount">0</span> <span>espectadores</span></div></div>
         </header>
-        
         <div class="stream-content">
             <div class="video-container" id="videoContainer">
-                <div class="server-change-overlay active" id="serverChangeOverlay">
-                    <div class="server-change-spinner"></div>
-                    <p class="server-change-text">Cargando transmisión...</p>
-                </div>
-                <div class="video-wrapper" id="videoJSContainer">
-                    <video id="videoPlayer" class="video-js vjs-default-skin vjs-big-play-centered" controls autoplay playsinline preload="auto"></video>
-                </div>
-                <div class="iframe-container" id="iframeContainer">
-                    <iframe id="streamIframe" src="" allowfullscreen="true" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-presentation allow-autoplay"></iframe>
-                </div>
+                <div class="server-change-overlay active" id="serverChangeOverlay"><div class="server-change-spinner"></div><p class="server-change-text">Cargando transmisión...</p></div>
+                <div class="video-wrapper" id="videoJSContainer"><video id="videoPlayer" class="video-js vjs-default-skin vjs-big-play-centered" controls autoplay playsinline preload="auto"></video></div>
+                <div class="iframe-container" id="iframeContainer"><iframe id="streamIframe" src="" allowfullscreen="true" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" referrerpolicy="no-referrer"></iframe></div>
             </div>
-            
             <div class="chat-sidebar">
-                <div class="chat-header">
-                    <h3><i class="fas fa-circle"></i> Chat</h3>
-                    <span class="chat-server-name" id="chatServerName">Principal</span>
-                    <span class="chat-online-count" id="chatOnlineCount">0</span>
-                </div>
-                <div class="chat-messages" id="chatMessages">
-                    <div style="text-align:center;padding:30px;color:#555;">
-                        <i class="fas fa-comments" style="font-size:30px;display:block;margin-bottom:8px;opacity:0.3;"></i>
-                        <p style="font-size:11px;">Sé el primero en comentar</p>
-                    </div>
-                </div>
-                <div class="chat-input-container">
-                    <div class="chat-input-wrapper">
-                        <input type="text" id="chatInput" class="chat-input" placeholder="Escribe un mensaje..." maxlength="200" autocomplete="off">
-                        <button class="chat-send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-                    </div>
-                </div>
+                <div class="chat-header"><h3><i class="fas fa-circle"></i> Chat</h3><span class="chat-server-name" id="chatServerName">Principal</span><span class="chat-online-count" id="chatOnlineCount">0</span></div>
+                <div class="chat-messages" id="chatMessages"><div style="text-align:center;padding:30px;color:#555;"><i class="fas fa-comments" style="font-size:30px;display:block;margin-bottom:8px;opacity:0.3;"></i><p style="font-size:11px;">Sé el primero en comentar</p></div></div>
+                <div class="chat-input-container"><div class="chat-input-wrapper"><input type="text" id="chatInput" class="chat-input" placeholder="Escribe un mensaje..." maxlength="200" autocomplete="off"><button class="chat-send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button></div></div>
             </div>
         </div>
     </div>
-    
     <div class="servers-overlay" id="serversOverlay" onclick="closeServersPanel()"></div>
-    <div class="servers-panel" id="serversPanel">
-        <div class="servers-panel-header">
-            <h3><i class="fas fa-server"></i> Servidores</h3>
-            <button class="servers-panel-close" onclick="closeServersPanel()"><i class="fas fa-times"></i></button>
-        </div>
-        <div id="serversList"></div>
-    </div>
-    
+    <div class="servers-panel" id="serversPanel"><div class="servers-panel-header"><h3><i class="fas fa-server"></i> Servidores</h3><button class="servers-panel-close" onclick="closeServersPanel()"><i class="fas fa-times"></i></button></div><div id="serversList"></div></div>
+
     <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
-<script>
-    const streamId = '<%= stream.id %>';
-    const userId = '<%= user.id %>';
-    const username = '<%= user.username %>';
-    const userRole = '<%= user.role %>';
-    const userAvatar = '<%= user.avatar %>';
-    const socket = io();
-    let player = null;
-    let hls = null;
-    let lastMessageTime = 0;
-    
-    const streamUrl = '<%- stream.url %>';
-    let currentServerUrl = streamUrl;
-    let currentServerName = 'Principal';
-    
-    const servers = [
-        { server: "Servidor Principal", title: "Principal", code: streamUrl },
-        { server: "DSports HD", title: "DSports HD", code: "https://la16hd.com/dsportsar.php" },
-        { server: "DSports +", title: "DSports +", code: "https://tvhd2.com/vivo/canales.php?stream=dsportsplus" },
-        { server: "Telemundo", title: "Telemundo", code: "https://tvhd2.com/vivo/canales.php?stream=telemundo" },
-        { server: "TyC Sports", title: "TyC Sports", code: "https://tvhd2.com/vivo/canales.php?stream=tycsports" },
-        { server: "DAZN Mundial", title: "DAZN Mundial", code: "https://zonatvlive.xyz/tvtodo/dazn-mundial.php" },
-        { server: "Fox Sports", title: "Fox Sports", code: "https://tvhd2.com/vivo/canales.php?stream=foxsports" },
-        { server: "Fox Sports 2", title: "Fox Sports 2", code: "https://tvhd2.com/vivo/canales.php?stream=foxsports2" },
-        { server: "Fox Sports 3", title: "Fox Sports 3", code: "https://tvhd2.com/vivo/canales.php?stream=foxsports3" },
-        { server: "TnT Sports", title: "TnT Sports", code: "https://tvhd2.com/vivo/canales.php?stream=tntsports" },
-        { server: "ESPN Premium", title: "ESPN Premium", code: "https://tvhd2.com/vivo/canales.php?stream=espnpremium" },
-        { server: "ESPN 6", title: "ESPN 6", code: "https://tvhd2.com/vivo/canales.php?stream=espn6" },
-        { server: "Win Sports Plus", title: "Win Sports Plus", code: "https://tvhd2.com/vivo/canales.php?stream=winsports2" },
-        { server: "Noticias CaracolTV", title: "Noticias CaracolTV", code: "https://us-b4-p-e-ml19.cdn.mdstrm.com/live-stream-gdai/632391734be92a791e2750e6/linear/hls/pa/event/AImtl9u6QA2hQXyM7DGbwg/stream/f842358f-8683-4d9f-88c3-26e16a7f78f4:DLS/variant/1efcaebae726efe8207bcd47027366cc/bandwidth/1078000.m3u8" },
-        { server: "Univision", title: "Univision", code: "https://tvhd2.com/vivo/canales.php?stream=univision" },
-        { server: "Canal 5", title: "Canal 5", code: "https://tvhd2.com/vivo/canales.php?stream=canal5" }
-    ];
-    
-    const serverChats = {};
-    let loadedServers = {};
-    servers.forEach((s, i) => { serverChats[i] = []; loadedServers[i] = false; });
-    
-    function populateServerSelectors() {
-        document.getElementById('serverSelect').innerHTML = servers.map((s, i) => 
-            '<option value="' + i + '" ' + (s.code === streamUrl ? 'selected' : '') + '>' + s.server + '</option>'
-        ).join('');
-        document.getElementById('serversList').innerHTML = servers.map((s, i) => 
-            '<button class="server-btn ' + (s.code === currentServerUrl ? 'active' : '') + '" onclick="selectServer(' + i + ')"><i class="fas fa-play-circle"></i> ' + s.server + '</button>'
-        ).join('');
-    }
-    populateServerSelectors();
-    
-    function destroyPlayer() {
-        if (hls) { hls.stopLoad(); hls.detachMedia(); hls.destroy(); hls = null; }
-        if (player) { player.pause(); player.dispose(); player = null; }
-        const v = document.getElementById('videoPlayer');
-        if (v) { v.pause(); v.removeAttribute('src'); v.load(); v.classList.add('video-js', 'vjs-default-skin', 'vjs-big-play-centered'); }
-        const iframe = document.getElementById('streamIframe');
-        if (iframe) iframe.src = 'about:blank';
-        document.getElementById('videoJSContainer').style.display = 'block';
-        document.getElementById('iframeContainer').style.display = 'none';
-    }
-    
-    // ============ CARGAR STREAM (PERMITE REPRODUCIR, BLOQUEA REDIRECCIÓN) ============
-    function loadStream(url) {
-        destroyPlayer();
-        document.getElementById('serverChangeOverlay').classList.add('active');
-        
-        if (url.includes('.php') || url.includes('canal.php') || url.includes('canales.php')) {
-            document.getElementById('videoJSContainer').style.display = 'none';
-            document.getElementById('iframeContainer').style.display = 'block';
-            
-            const iframe = document.getElementById('streamIframe');
-            
-            // PERMITIR reproducción pero RESTRINGIR navegación
-            iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-autoplay allow-forms');
-            iframe.src = url;
-            
-            iframe.onload = function() {
-                document.getElementById('serverChangeOverlay').classList.remove('active');
-            };
-            
-            setTimeout(function() {
-                document.getElementById('serverChangeOverlay').classList.remove('active');
-            }, 6000);
-            
-        } else if (url.endsWith('.m3u8') || url.includes('m3u8')) {
-            initHLS(url);
-        } else {
-            initVJS(url);
+    <script>
+        const streamId = '<%= stream.id %>';
+        const userId = '<%= user.id %>';
+        const username = '<%= user.username %>';
+        const userRole = '<%= user.role %>';
+        const userAvatar = '<%= user.avatar %>';
+        const socket = io();
+        let player = null, hls = null, lastMessageTime = 0;
+        const streamUrl = '<%- stream.url %>';
+        let currentServerUrl = streamUrl, currentServerName = 'Principal';
+
+        const servers = [
+            { server: "Servidor Principal", code: streamUrl },
+            { server: "DSports HD", code: "https://la16hd.com/dsportsar.php" },
+            { server: "DSports +", code: "https://tvhd2.com/vivo/canales.php?stream=dsportsplus" },
+            { server: "Telemundo", code: "https://tvhd2.com/vivo/canales.php?stream=telemundo" },
+            { server: "TyC Sports", code: "https://tvhd2.com/vivo/canales.php?stream=tycsports" },
+            { server: "DAZN Mundial", code: "https://zonatvlive.xyz/tvtodo/dazn-mundial.php" },
+            { server: "Fox Sports", code: "https://tvhd2.com/vivo/canales.php?stream=foxsports" },
+            { server: "Fox Sports 2", code: "https://tvhd2.com/vivo/canales.php?stream=foxsports2" },
+            { server: "Fox Sports 3", code: "https://tvhd2.com/vivo/canales.php?stream=foxsports3" },
+            { server: "TnT Sports", code: "https://tvhd2.com/vivo/canales.php?stream=tntsports" },
+            { server: "ESPN Premium", code: "https://tvhd2.com/vivo/canales.php?stream=espnpremium" },
+            { server: "ESPN 6", code: "https://tvhd2.com/vivo/canales.php?stream=espn6" },
+            { server: "Win Sports Plus", code: "https://tvhd2.com/vivo/canales.php?stream=winsports2" },
+            { server: "Noticias CaracolTV", code: "https://us-b4-p-e-ml19.cdn.mdstrm.com/live-stream-gdai/632391734be92a791e2750e6/linear/hls/pa/event/AImtl9u6QA2hQXyM7DGbwg/stream/f842358f-8683-4d9f-88c3-26e16a7f78f4:DLS/variant/1efcaebae726efe8207bcd47027366cc/bandwidth/1078000.m3u8" },
+            { server: "Univision", code: "https://tvhd2.com/vivo/canales.php?stream=univision" },
+            { server: "Canal 5", code: "https://tvhd2.com/vivo/canales.php?stream=canal5" }
+        ];
+
+        const serverChats = {}; let loadedServers = {};
+        servers.forEach((s, i) => { serverChats[i] = []; loadedServers[i] = false; });
+
+        function populateServerSelectors() {
+            document.getElementById('serverSelect').innerHTML = servers.map((s, i) => '<option value="' + i + '" ' + (s.code === streamUrl ? 'selected' : '') + '>' + s.server + '</option>').join('');
+            document.getElementById('serversList').innerHTML = servers.map((s, i) => '<button class="server-btn ' + (s.code === currentServerUrl ? 'active' : '') + '" onclick="selectServer(' + i + ')"><i class="fas fa-play-circle"></i> ' + s.server + '</button>').join('');
         }
-    }
-    
-    function initHLS(url) {
-        const v = document.getElementById('videoPlayer');
-        v.classList.remove('video-js', 'vjs-default-skin', 'vjs-big-play-centered');
-        v.controls = true; v.autoplay = true; v.playsInline = true;
-        v.style.width = '100%'; v.style.height = '100%';
-        
-        if (Hls.isSupported()) {
-            hls = new Hls({ enableWorker: true, lowLatencyMode: true });
-            hls.loadSource(url); hls.attachMedia(v);
-            hls.on(Hls.Events.MANIFEST_PARSED, () => { v.play().catch(() => {}); document.getElementById('serverChangeOverlay').classList.remove('active'); });
-        } else if (v.canPlayType('application/vnd.apple.mpegurl')) {
-            v.src = url;
-            v.addEventListener('loadedmetadata', () => { v.play(); document.getElementById('serverChangeOverlay').classList.remove('active'); });
+        populateServerSelectors();
+
+        function destroyPlayer() {
+            if (hls) { hls.stopLoad(); hls.detachMedia(); hls.destroy(); hls = null; }
+            if (player) { player.pause(); player.dispose(); player = null; }
+            const v = document.getElementById('videoPlayer');
+            if (v) { v.pause(); v.removeAttribute('src'); v.load(); v.classList.add('video-js', 'vjs-default-skin', 'vjs-big-play-centered'); }
+            document.getElementById('streamIframe').src = 'about:blank';
+            document.getElementById('videoJSContainer').style.display = 'block';
+            document.getElementById('iframeContainer').style.display = 'none';
         }
-    }
-    
-    function initVJS(url) {
-        player = videojs('videoPlayer', { controls: true, autoplay: true, preload: 'auto', fluid: true, sources: [{ src: url, type: 'video/mp4' }] });
-        player.on('playing', () => document.getElementById('serverChangeOverlay').classList.remove('active'));
-        setTimeout(() => document.getElementById('serverChangeOverlay').classList.remove('active'), 6000);
-    }
-    
-    function changeServer() { const i = document.getElementById('serverSelect').value; if (i !== '') selectServer(parseInt(i)); }
-    
-    async function selectServer(index) {
-        const s = servers[index];
-        if (!s || (s.code === currentServerUrl && s.server === currentServerName)) return;
-        const prev = getCurrentServerIndex();
-        currentServerUrl = s.code; currentServerName = s.server;
-        document.getElementById('chatServerName').textContent = s.server;
-        document.getElementById('serverSelect').value = index;
-        document.querySelectorAll('.server-btn').forEach((b, i) => b.classList.toggle('active', i === index));
-        closeServersPanel();
-        socket.emit('leave-server-chat', { streamId, serverIndex: prev });
-        socket.emit('join-server-chat', { streamId, serverIndex: index });
-        await loadServerMessages(index);
-        loadStream(currentServerUrl);
-    }
-    
-    function getCurrentServerIndex() { for (let i = 0; i < servers.length; i++) { if (servers[i].server === currentServerName) return i; } return 0; }
-    
-    async function loadServerMessages(i) {
-        if (loadedServers[i] && serverChats[i].length > 0) { displayCurrentServerChat(i); return; }
-        try {
-            const r = await fetch('/stream/chat/' + streamId + '?server=' + i);
-            const m = await r.json();
-            if (m && m.length > 0) { serverChats[i] = m; loadedServers[i] = true; }
-        } catch(e) {}
-        displayCurrentServerChat(i);
-    }
-    
-    function displayCurrentServerChat(i) {
-        const c = document.getElementById('chatMessages'); c.innerHTML = '';
-        const m = serverChats[i] || [];
-        if (m.length > 0) m.forEach(msg => addMsg(msg));
-        else c.innerHTML = '<div style="text-align:center;padding:30px;color:#555;"><i class="fas fa-comments" style="font-size:30px;display:block;margin-bottom:8px;opacity:0.3;"></i><p style="font-size:11px;">Sé el primero en comentar</p></div>';
-        scrollChat();
-    }
-    
-    function addMsg(d) {
-        const c = document.getElementById('chatMessages');
-        if (c.querySelector('div[style]')) c.innerHTML = '';
-        const div = document.createElement('div'); div.className = 'chat-message';
-        const rc = 'role-' + (d.role || 'user');
-        const rt = (d.role || 'user').charAt(0).toUpperCase() + (d.role || 'user').slice(1);
-        const t = d.timestamp || d.created_at ? new Date(d.timestamp || d.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-        div.innerHTML = '<img src="/uploads/avatars/' + (d.avatar || 'default.png') + '" class="message-avatar" onerror="this.src=\'/uploads/avatars/default.png\'"><div class="message-content"><div class="message-header"><span class="message-username" style="color:' + getRC(d.role) + '">' + esc(d.username) + '</span><span class="role-badge-mini ' + rc + '">' + rt + '</span><span class="message-time">' + t + '</span></div><div class="message-text">' + esc(d.message || '') + '</div></div>';
-        c.appendChild(div); scrollChat();
-    }
-    
-    function getRC(r) { const o = { owner: '#ffd700', admin: '#ea4335', user: '#4a90e2' }; return o[r] || '#fff'; }
-    function scrollChat() { const c = document.getElementById('chatMessages'); if (c) { requestAnimationFrame(() => { c.scrollTop = c.scrollHeight; }); } }
-    
-    socket.on('viewer-count', (c) => { document.getElementById('viewerCount').textContent = c; document.getElementById('chatOnlineCount').textContent = c; });
-    socket.on('new-server-message', function(d) {
-        const ci = getCurrentServerIndex();
-        if (d.serverIndex !== undefined) { if (!serverChats[d.serverIndex]) serverChats[d.serverIndex] = []; serverChats[d.serverIndex].push(d); }
-        if (d.serverIndex === ci) addMsg(d);
-    });
-    
-    socket.on('mute-notification', function(data) {
-        const container = document.getElementById('chatMessages');
-        const div = document.createElement('div');
-        div.style.cssText = 'text-align:center; padding:8px; color:#ea4335; font-size:10px; background:rgba(234,67,53,0.1); border:1px solid rgba(234,67,53,0.3); border-radius:6px; margin:4px 0;';
-        div.innerHTML = '<i class="fas fa-microphone-slash"></i> ' + data.message;
-        container.appendChild(div);
-        scrollChat();
-    });
-    
-    function sendMessage() {
-        const inp = document.getElementById('chatInput'), msg = inp.value.trim();
-        if (!msg || Date.now() - lastMessageTime < 1000 || msg.length > 200) return;
-        if (containsLink(msg)) { alert('No se permiten enlaces'); return; }
-        const si = getCurrentServerIndex();
-        const md = { streamId, serverIndex: si, userId, username, avatar: userAvatar, role: userRole, message: msg, timestamp: new Date() };
-        if (!serverChats[si]) serverChats[si] = [];
-        serverChats[si].push(md);
-        socket.emit('server-chat-message', md);
-        fetch('/stream/chat/' + streamId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg, serverIndex: si }) }).catch(() => {});
-        inp.value = ''; lastMessageTime = Date.now(); inp.focus();
-    }
-    
-    document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
-    
-    function containsLink(text) { return /(https?:\/\/|www\.|\.com|\.net|\.org|\.xyz|\.tv|\.live|\.php|\.m3u8|\.mp4)/i.test(text); }
-    function openServersPanel() { document.getElementById('serversPanel').classList.add('active'); document.getElementById('serversOverlay').classList.add('active'); }
-    function closeServersPanel() { document.getElementById('serversPanel').classList.remove('active'); document.getElementById('serversOverlay').classList.remove('active'); }
-    function esc(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
-    
-    // ============ BLOQUEO DE ANUNCIOS Y REDIRECCIONES (PERMITE REPRODUCCIÓN) ============
-    (function() {
-        // Bloquear popups (no afecta reproducción)
-        var originalOpen = window.open;
-        window.open = function(url, name, features) {
-            // Solo permitir si es del mismo origen
-            if (url && (url.startsWith('/') || url.includes(window.location.host) || url.startsWith('#'))) {
-                return originalOpen.call(window, url, name, features);
+
+        function loadStream(url) {
+            destroyPlayer();
+            document.getElementById('serverChangeOverlay').classList.add('active');
+            if (url.includes('.php') || url.includes('canal.php') || url.includes('canales.php')) {
+                document.getElementById('videoJSContainer').style.display = 'none';
+                document.getElementById('iframeContainer').style.display = 'block';
+                document.getElementById('streamIframe').src = url;
+                setTimeout(() => document.getElementById('serverChangeOverlay').classList.remove('active'), 6000);
+            } else if (url.endsWith('.m3u8') || url.includes('m3u8')) {
+                initHLS(url);
+            } else {
+                initVJS(url);
             }
-            console.log('🚫 Popup externo bloqueado');
-            return null;
-        };
-        
-        // Monitorear el iframe para detectar redirecciones
-        setInterval(function() {
-            var iframe = document.getElementById('streamIframe');
-            if (iframe && iframe.src && iframe.src !== 'about:blank' && iframe.src !== '') {
-                // Verificar si el iframe redirigió a otro dominio
-                try {
-                    var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    // Si podemos acceder, no hay redirección - todo bien
-                } catch(e) {
-                    // Si hay error de cross-origin, es normal en streams de otro dominio
-                    // No bloqueamos, solo monitoreamos
+        }
+
+        function initHLS(url) {
+            const v = document.getElementById('videoPlayer');
+            v.classList.remove('video-js', 'vjs-default-skin', 'vjs-big-play-centered');
+            v.controls = true; v.autoplay = true; v.playsInline = true;
+            v.style.width = '100%'; v.style.height = '100%';
+            if (Hls.isSupported()) {
+                hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+                hls.loadSource(url); hls.attachMedia(v);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => { v.play().catch(() => {}); document.getElementById('serverChangeOverlay').classList.remove('active'); });
+            } else if (v.canPlayType('application/vnd.apple.mpegurl')) {
+                v.src = url;
+                v.addEventListener('loadedmetadata', () => { v.play(); document.getElementById('serverChangeOverlay').classList.remove('active'); });
+            }
+        }
+
+        function initVJS(url) {
+            player = videojs('videoPlayer', { controls: true, autoplay: true, preload: 'auto', fluid: true, sources: [{ src: url, type: 'video/mp4' }] });
+            player.on('playing', () => document.getElementById('serverChangeOverlay').classList.remove('active'));
+            setTimeout(() => document.getElementById('serverChangeOverlay').classList.remove('active'), 6000);
+        }
+
+        function changeServer() { const i = document.getElementById('serverSelect').value; if (i !== '') selectServer(parseInt(i)); }
+
+        async function selectServer(index) {
+            const s = servers[index];
+            if (!s || (s.code === currentServerUrl && s.server === currentServerName)) return;
+            const prev = getCurrentServerIndex();
+            currentServerUrl = s.code; currentServerName = s.server;
+            document.getElementById('chatServerName').textContent = s.server;
+            document.getElementById('serverSelect').value = index;
+            document.querySelectorAll('.server-btn').forEach((b, i) => b.classList.toggle('active', i === index));
+            closeServersPanel();
+            socket.emit('leave-server-chat', { streamId, serverIndex: prev });
+            socket.emit('join-server-chat', { streamId, serverIndex: index });
+            await loadServerMessages(index);
+            loadStream(currentServerUrl);
+        }
+
+        function getCurrentServerIndex() { for (let i = 0; i < servers.length; i++) { if (servers[i].server === currentServerName) return i; } return 0; }
+        async function loadServerMessages(i) { if (loadedServers[i] && serverChats[i].length > 0) { displayCurrentServerChat(i); return; } try { const r = await fetch('/stream/chat/' + streamId + '?server=' + i); const m = await r.json(); if (m && m.length > 0) { serverChats[i] = m; loadedServers[i] = true; } } catch(e) {} displayCurrentServerChat(i); }
+        function displayCurrentServerChat(i) { const c = document.getElementById('chatMessages'); c.innerHTML = ''; const m = serverChats[i] || []; if (m.length > 0) m.forEach(msg => addMsg(msg)); else c.innerHTML = '<div style="text-align:center;padding:30px;color:#555;"><i class="fas fa-comments" style="font-size:30px;display:block;margin-bottom:8px;opacity:0.3;"></i><p style="font-size:11px;">Sé el primero en comentar</p></div>'; scrollChat(); }
+        function addMsg(d) { const c = document.getElementById('chatMessages'); if (c.querySelector('div[style]')) c.innerHTML = ''; const div = document.createElement('div'); div.className = 'chat-message'; const rc = 'role-' + (d.role || 'user'); const rt = (d.role || 'user').charAt(0).toUpperCase() + (d.role || 'user').slice(1); const t = d.timestamp || d.created_at ? new Date(d.timestamp || d.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }); div.innerHTML = '<img src="' + (d.avatar || '/uploads/avatars/default.png') + '" class="message-avatar" onerror="this.src=\'/uploads/avatars/default.png\'"><div class="message-content"><div class="message-header"><span class="message-username" style="color:' + getRC(d.role) + '">' + esc(d.username) + '</span><span class="role-badge-mini ' + rc + '">' + rt + '</span><span class="message-time">' + t + '</span></div><div class="message-text">' + esc(d.message || '') + '</div></div>'; c.appendChild(div); scrollChat(); }
+        function getRC(r) { const o = { owner: '#ffd700', admin: '#ea4335', user: '#4a90e2' }; return o[r] || '#fff'; }
+        function scrollChat() { const c = document.getElementById('chatMessages'); if (c) { c.scrollTop = c.scrollHeight; } }
+
+        socket.on('viewer-count', (c) => { document.getElementById('viewerCount').textContent = c; document.getElementById('chatOnlineCount').textContent = c; });
+        socket.on('new-server-message', function(d) { const ci = getCurrentServerIndex(); if (d.serverIndex !== undefined) { if (!serverChats[d.serverIndex]) serverChats[d.serverIndex] = []; serverChats[d.serverIndex].push(d); } if (d.serverIndex === ci) addMsg(d); });
+        socket.on('mute-notification', function(data) { const container = document.getElementById('chatMessages'); const div = document.createElement('div'); div.style.cssText = 'text-align:center; padding:8px; color:#ea4335; font-size:10px; background:rgba(234,67,53,0.1); border:1px solid rgba(234,67,53,0.3); border-radius:6px; margin:4px 0;'; div.innerHTML = '<i class="fas fa-microphone-slash"></i> ' + data.message; container.appendChild(div); scrollChat(); });
+
+        function sendMessage() { const inp = document.getElementById('chatInput'), msg = inp.value.trim(); if (!msg || Date.now() - lastMessageTime < 1000 || msg.length > 200) return; if (containsLink(msg)) return; const si = getCurrentServerIndex(); const md = { streamId, serverIndex: si, userId, username, avatar: userAvatar, role: userRole, message: msg, timestamp: new Date() }; if (!serverChats[si]) serverChats[si] = []; serverChats[si].push(md); socket.emit('server-chat-message', md); fetch('/stream/chat/' + streamId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg, serverIndex: si }) }).catch(() => {}); inp.value = ''; lastMessageTime = Date.now(); inp.focus(); }
+        document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
+        function containsLink(text) { return /(https?:\/\/|www\.|\.com|\.net|\.org|\.xyz|\.tv|\.live|\.php|\.m3u8|\.mp4)/i.test(text); }
+        function openServersPanel() { document.getElementById('serversPanel').classList.add('active'); document.getElementById('serversOverlay').classList.add('active'); }
+        function closeServersPanel() { document.getElementById('serversPanel').classList.remove('active'); document.getElementById('serversOverlay').classList.remove('active'); }
+        function esc(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+        // ============ PROTECCIÓN ANTI-REDIRECCIÓN ============
+        (function() {
+            // Monitorear cambios en el iframe
+            let lastIframeSrc = '';
+            setInterval(function() {
+                const iframe = document.getElementById('streamIframe');
+                if (iframe && iframe.src && iframe.src !== 'about:blank') {
+                    if (lastIframeSrc && iframe.src !== lastIframeSrc && iframe.src !== currentServerUrl) {
+                        const isAllowed = servers.some(s => iframe.src.includes(new URL(s.code).hostname));
+                        if (!isAllowed) {
+                            iframe.src = currentServerUrl;
+                        }
+                    }
+                    lastIframeSrc = iframe.src;
                 }
-                
-                // Si el src cambió a algo no autorizado
-                var currentSrc = iframe.src;
-                var isAllowed = servers.some(function(s) {
-                    return currentSrc.includes(new URL(s.code).hostname) || 
-                           currentSrc.startsWith(s.code) ||
-                           currentSrc === s.code;
-                });
-                
-                if (!isAllowed && currentSrc !== currentServerUrl && !currentSrc.includes('about:blank')) {
-                    console.log('🚫 Redirección detectada, restaurando...');
-                    iframe.src = currentServerUrl;
+            }, 2000);
+
+            // Prevenir que el iframe navegue la página principal
+            window.addEventListener('beforeunload', function(e) {
+                if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+                    e.preventDefault();
+                    return '¿Salir del stream?';
                 }
-            }
-        }, 3000);
-        
-        // Bloquear clicks en enlaces externos dentro del iframe
-        window.addEventListener('message', function(e) {
-            // Ignorar mensajes que intenten abrir ventanas
-            if (e.data && typeof e.data === 'string' && e.data.includes('http')) {
-                e.stopPropagation();
-            }
-        });
-    })();
-    
-    // Iniciar
-    currentServerName = servers[0].server;
-    document.getElementById('chatServerName').textContent = currentServerName;
-    loadStream(streamUrl);
-    loadServerMessages(0);
-    socket.emit('join-server-chat', { streamId, serverIndex: 0 });
-    window.addEventListener('beforeunload', () => { socket.emit('leave-server-chat', { streamId, serverIndex: getCurrentServerIndex() }); destroyPlayer(); });
-</script>
+            });
+        })();
+
+        currentServerName = servers[0].server;
+        document.getElementById('chatServerName').textContent = currentServerName;
+        loadStream(streamUrl);
+        loadServerMessages(0);
+        socket.emit('join-server-chat', { streamId, serverIndex: 0 });
+        window.addEventListener('beforeunload', () => { socket.emit('leave-server-chat', { streamId, serverIndex: getCurrentServerIndex() }); destroyPlayer(); });
+    </script>
 </body>
 </html>
