@@ -35,9 +35,17 @@
         .video-container { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; position: relative; min-width: 0; overflow: hidden; }
         .player-wrapper { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: #000; }
         .player-wrapper video { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; }
-        .player-wrapper iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; }
+        .player-wrapper iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; background: #000; }
         
-        .click-shield { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: transparent; cursor: default; }
+        /* CAPA PROTECTORA - Permite pasar clicks a los controles pero no al iframe */
+        .click-shield {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 10; background: transparent;
+            pointer-events: none;
+        }
+        /* Los controles SÍ reciben clicks */
+        .custom-controls { pointer-events: auto; }
         
         .custom-controls { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.95)); padding: 25px 12px 8px; z-index: 20; display: flex; align-items: center; gap: 8px; opacity: 1; transition: opacity 0.3s; min-height: 44px; }
         .custom-controls.hidden { opacity: 0; pointer-events: none; }
@@ -96,7 +104,6 @@
         .servers-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 199; }
         .servers-overlay.active { display: block; }
         
-        @media (min-width: 1025px) { .control-btn:hover { color: #667eea; transform: scale(1.1); } .chat-send-btn:hover { transform: scale(1.1); } }
         @media (max-width: 1024px) { .stream-content { flex-direction: column; } .video-container { height: 45vh; flex: none; min-height: 200px; } .chat-sidebar { width: 100%; flex: 1; min-height: 250px; } .server-selector { display: none; } .mobile-server-btn { display: block; } .chat-input-container { position: sticky; bottom: 0; } }
         @media (max-width: 768px) { .stream-header { padding: 6px 8px; min-height: 40px; } .video-container { height: 35vh; min-height: 180px; } .custom-controls { padding: 20px 8px 6px; } .control-btn { font-size: 14px; width: 30px; height: 30px; } .volume-slider { width: 50px; } .viewers-badge span:last-child { display: none; } }
         @media (max-width: 480px) { .video-container { height: 30vh; min-height: 160px; } .chat-sidebar { min-height: 250px; } .chat-input { font-size: 16px; } .chat-send-btn { width: 36px; height: 36px; } }
@@ -112,7 +119,7 @@
             <div class="video-container" id="videoContainer">
                 <div class="server-change-overlay active" id="serverChangeOverlay"><div class="server-change-spinner"></div><p class="server-change-text">Cargando transmisión...</p></div>
                 <div class="player-wrapper" id="playerWrapper"></div>
-                <div class="click-shield" id="clickShield"></div>
+                <div class="click-shield"></div>
                 <div class="custom-controls" id="customControls">
                     <button class="control-btn" id="playPauseBtn" onclick="togglePlay()"><i class="fas fa-play"></i></button>
                     <div class="volume-container"><button class="control-btn" id="volumeBtn" onclick="toggleMute()"><i class="fas fa-volume-up"></i></button><input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" oninput="changeVolume(this.value)"></div>
@@ -133,10 +140,10 @@
     <script>
         const streamId = '<%= stream.id %>', userId = '<%= user.id %>', username = '<%= user.username %>', userRole = '<%= user.role %>', userAvatar = '<%= user.avatar %>';
         const socket = io();
-        let hls = null, lastMessageTime = 0, currentVolume = 100, isMuted = false, isPlaying = false;
+        let hls = null, lastMessageTime = 0, currentVolume = 100, isMuted = false;
         const streamUrl = '<%- stream.url %>';
         let currentServerUrl = streamUrl, currentServerName = 'Principal';
-        let currentMedia = null;
+        let currentVideo = null;
 
         const servers = [
             { server: "Servidor Principal", code: streamUrl },
@@ -166,65 +173,56 @@
         }
         populateServerSelectors();
 
-        // ============ OBTENER ELEMENTO MULTIMEDIA (BUSCA EN IFRAME) ============
-        function findMedia() {
-            // Buscar video directo
-            let v = document.getElementById('videoPlayer');
-            if (v) { currentMedia = v; return v; }
-            // Buscar dentro del iframe
+        // ============ CONTROLES UNIVERSALES ============
+        function getVideo() {
+            if (currentVideo && currentVideo.parentNode) return currentVideo;
+            const v = document.getElementById('videoPlayer');
+            if (v) { currentVideo = v; return v; }
+            // Buscar video dentro del iframe
             const iframe = document.getElementById('streamIframe');
             if (iframe) {
                 try {
-                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    v = iframeDoc.querySelector('video');
-                    if (v) { currentMedia = v; return v; }
+                    const doc = iframe.contentDocument || iframe.contentWindow.document;
+                    const vid = doc.querySelector('video');
+                    if (vid) { currentVideo = vid; return vid; }
                 } catch(e) {}
             }
             return null;
         }
 
-        // Sincronizar eventos del video
-        function syncMediaEvents(media) {
-            if (!media) return;
-            media.addEventListener('play', () => { isPlaying = true; updatePlayButton(); });
-            media.addEventListener('pause', () => { isPlaying = false; updatePlayButton(); });
-            media.addEventListener('volumechange', () => {
-                currentVolume = Math.round(media.volume * 100);
-                document.getElementById('volumeSlider').value = isMuted ? 0 : currentVolume;
-            });
-            currentMedia = media;
-        }
-
-        // ============ CONTROLES CONECTADOS ============
         function togglePlay() {
-            const media = findMedia();
-            if (!media) return;
-            if (media.paused) { media.play().catch(() => {}); isPlaying = true; }
-            else { media.pause(); isPlaying = false; }
-            updatePlayButton();
+            const v = getVideo();
+            if (!v) return;
+            v.paused ? v.play().catch(() => {}) : v.pause();
+            updatePlayBtn();
         }
 
         function toggleMute() {
-            const media = findMedia();
-            if (!media) return;
-            isMuted = !isMuted;
-            media.muted = isMuted;
-            document.getElementById('volumeBtn').innerHTML = isMuted ? '<i class="fas fa-volume-mute"></i>' : currentVolume == 0 ? '<i class="fas fa-volume-mute"></i>' : currentVolume < 50 ? '<i class="fas fa-volume-down"></i>' : '<i class="fas fa-volume-up"></i>';
-            document.getElementById('volumeSlider').value = isMuted ? 0 : currentVolume;
+            const v = getVideo();
+            if (!v) return;
+            v.muted = !v.muted;
+            updateVolUI();
         }
 
         function changeVolume(val) {
-            const media = findMedia();
+            const v = getVideo();
             currentVolume = parseInt(val);
-            if (media) {
-                media.volume = currentVolume / 100;
-                media.muted = currentVolume === 0;
-                isMuted = currentVolume === 0;
-            }
-            const btn = document.getElementById('volumeBtn');
-            if (currentVolume == 0 || isMuted) { btn.innerHTML = '<i class="fas fa-volume-mute"></i>'; }
-            else if (currentVolume < 50) { btn.innerHTML = '<i class="fas fa-volume-down"></i>'; }
-            else { btn.innerHTML = '<i class="fas fa-volume-up"></i>'; }
+            if (v) { v.volume = currentVolume / 100; v.muted = (currentVolume === 0); }
+            updateVolUI();
+        }
+
+        function updateVolUI() {
+            const v = getVideo();
+            const vol = v ? Math.round(v.volume * 100) : currentVolume;
+            const mut = v ? v.muted : false;
+            document.getElementById('volumeSlider').value = mut ? 0 : vol;
+            const b = document.getElementById('volumeBtn');
+            b.innerHTML = (mut || vol === 0) ? '<i class="fas fa-volume-mute"></i>' : vol < 50 ? '<i class="fas fa-volume-down"></i>' : '<i class="fas fa-volume-up"></i>';
+        }
+
+        function updatePlayBtn() {
+            const v = getVideo();
+            document.getElementById('playPauseBtn').innerHTML = (v && !v.paused) ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
         }
 
         function toggleFullscreen() {
@@ -232,59 +230,79 @@
             document.fullscreenElement ? document.exitFullscreen() : c.requestFullscreen().catch(() => {});
         }
 
-        function updatePlayButton() {
-            document.getElementById('playPauseBtn').innerHTML = isPlaying ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
-        }
-
-        // Auto-ocultar controles
-        let hideTimeout;
-        const vidContainer = document.getElementById('videoContainer');
-        vidContainer.addEventListener('mousemove', showControls);
-        vidContainer.addEventListener('touchstart', showControls);
-        function showControls() {
-            const c = document.getElementById('customControls');
-            c.classList.remove('hidden');
-            clearTimeout(hideTimeout);
-            hideTimeout = setTimeout(() => c.classList.add('hidden'), 3000);
-        }
+        // Auto-ocultar
+        let ht;
+        const vc = document.getElementById('videoContainer');
+        vc.addEventListener('mousemove', () => { const c = document.getElementById('customControls'); c.classList.remove('hidden'); clearTimeout(ht); ht = setTimeout(() => c.classList.add('hidden'), 3000); });
+        vc.addEventListener('touchstart', () => { const c = document.getElementById('customControls'); c.classList.remove('hidden'); clearTimeout(ht); ht = setTimeout(() => c.classList.add('hidden'), 3000); });
 
         // ============ CARGAR STREAM ============
         function destroyPlayer() {
             if (hls) { hls.stopLoad(); hls.detachMedia(); hls.destroy(); hls = null; }
-            isPlaying = false; updatePlayButton();
+            currentVideo = null;
             document.getElementById('playerWrapper').innerHTML = '';
-            currentMedia = null;
+            updatePlayBtn();
         }
 
         function loadStream(url) {
             destroyPlayer();
             document.getElementById('serverChangeOverlay').classList.add('active');
-            const wrapper = document.getElementById('playerWrapper');
+            const w = document.getElementById('playerWrapper');
             
             if (url.includes('.php') || url.includes('canal.php') || url.includes('canales.php')) {
+                // Iframe para PHP
                 const iframe = document.createElement('iframe');
-                iframe.id = 'streamIframe'; iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture'; iframe.referrerPolicy = 'no-referrer'; iframe.src = url;
+                iframe.id = 'streamIframe';
+                iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+                iframe.referrerPolicy = 'no-referrer';
+                iframe.src = url;
                 iframe.style.cssText = 'width:100%;height:100%;border:none;position:absolute;top:0;left:0;';
-                wrapper.appendChild(iframe);
+                w.appendChild(iframe);
                 iframe.onload = () => {
                     document.getElementById('serverChangeOverlay').classList.remove('active');
+                    // Intentar acceder al video dentro del iframe
                     setTimeout(() => {
-                        const media = findMedia();
-                        if (media) { syncMediaEvents(media); isPlaying = true; updatePlayButton(); }
+                        const v = getVideo();
+                        if (v) {
+                            v.addEventListener('play', updatePlayBtn);
+                            v.addEventListener('pause', updatePlayBtn);
+                            v.addEventListener('volumechange', updateVolUI);
+                            updatePlayBtn();
+                        }
                     }, 2000);
                 };
-                setTimeout(() => { document.getElementById('serverChangeOverlay').classList.remove('active'); isPlaying = true; updatePlayButton(); }, 6000);
-            } else if (url.endsWith('.m3u8') || url.includes('m3u8')) {
-                const v = document.createElement('video'); v.id = 'videoPlayer'; v.autoplay = true; v.playsInline = true; v.setAttribute('playsinline', '');
-                v.style.cssText = 'width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;';
-                wrapper.appendChild(v); syncMediaEvents(v);
-                if (Hls.isSupported()) { hls = new Hls({ enableWorker: true, lowLatencyMode: true }); hls.loadSource(url); hls.attachMedia(v); hls.on(Hls.Events.MANIFEST_PARSED, () => { v.play().catch(() => {}); document.getElementById('serverChangeOverlay').classList.remove('active'); }); }
-                else if (v.canPlayType('application/vnd.apple.mpegurl')) { v.src = url; v.addEventListener('loadedmetadata', () => { v.play(); document.getElementById('serverChangeOverlay').classList.remove('active'); }); }
+                setTimeout(() => document.getElementById('serverChangeOverlay').classList.remove('active'), 6000);
             } else {
-                const v = document.createElement('video'); v.id = 'videoPlayer'; v.autoplay = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.src = url;
+                // Video nativo para HLS, MP4, M3U8
+                const v = document.createElement('video');
+                v.id = 'videoPlayer';
+                v.controls = false;
+                v.autoplay = true;
+                v.playsInline = true;
+                v.setAttribute('playsinline', '');
+                v.volume = currentVolume / 100;
                 v.style.cssText = 'width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;';
-                wrapper.appendChild(v); syncMediaEvents(v);
-                v.addEventListener('playing', () => { document.getElementById('serverChangeOverlay').classList.remove('active'); });
+                w.appendChild(v);
+                currentVideo = v;
+                
+                v.addEventListener('play', updatePlayBtn);
+                v.addEventListener('pause', updatePlayBtn);
+                v.addEventListener('playing', () => { document.getElementById('serverChangeOverlay').classList.remove('active'); updatePlayBtn(); });
+                v.addEventListener('volumechange', updateVolUI);
+                
+                if (url.endsWith('.m3u8') || url.includes('m3u8')) {
+                    if (Hls.isSupported()) {
+                        hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+                        hls.loadSource(url); hls.attachMedia(v);
+                        hls.on(Hls.Events.MANIFEST_PARSED, () => v.play().catch(() => {}));
+                    } else if (v.canPlayType('application/vnd.apple.mpegurl')) {
+                        v.src = url;
+                        v.addEventListener('loadedmetadata', () => v.play());
+                    }
+                } else {
+                    v.src = url;
+                    v.play().catch(() => {});
+                }
                 setTimeout(() => document.getElementById('serverChangeOverlay').classList.remove('active'), 5000);
             }
         }
