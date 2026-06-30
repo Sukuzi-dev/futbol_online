@@ -166,7 +166,8 @@
             if (player) { player.pause(); player.dispose(); player = null; }
             const v = document.getElementById('videoPlayer');
             if (v) { v.pause(); v.removeAttribute('src'); v.load(); v.classList.add('video-js', 'vjs-default-skin', 'vjs-big-play-centered'); }
-            document.getElementById('streamIframe').src = 'about:blank';
+            const iframe = document.getElementById('streamIframe');
+            if (iframe) iframe.src = 'about:blank';
             document.getElementById('videoJSContainer').style.display = 'block';
             document.getElementById('iframeContainer').style.display = 'none';
         }
@@ -177,7 +178,9 @@
             if (url.includes('.php') || url.includes('canal.php') || url.includes('canales.php')) {
                 document.getElementById('videoJSContainer').style.display = 'none';
                 document.getElementById('iframeContainer').style.display = 'block';
-                document.getElementById('streamIframe').src = url;
+                const iframe = document.getElementById('streamIframe');
+                iframe.removeAttribute('sandbox');
+                iframe.src = url;
                 setTimeout(() => document.getElementById('serverChangeOverlay').classList.remove('active'), 6000);
             } else if (url.endsWith('.m3u8') || url.includes('m3u8')) {
                 initHLS(url);
@@ -244,28 +247,25 @@
 
         // ============ PROTECCIÓN ANTI-REDIRECCIÓN ============
         (function() {
-            // Monitorear cambios en el iframe
             let lastIframeSrc = '';
             setInterval(function() {
                 const iframe = document.getElementById('streamIframe');
                 if (iframe && iframe.src && iframe.src !== 'about:blank') {
                     if (lastIframeSrc && iframe.src !== lastIframeSrc && iframe.src !== currentServerUrl) {
-                        const isAllowed = servers.some(s => iframe.src.includes(new URL(s.code).hostname));
-                        if (!isAllowed) {
-                            iframe.src = currentServerUrl;
-                        }
+                        try {
+                            const currentHost = new URL(iframe.src).hostname;
+                            const isAllowed = servers.some(s => {
+                                try { return currentHost === new URL(s.code).hostname; } catch(e) { return false; }
+                            });
+                            if (!isAllowed) {
+                                console.log('🚫 Redirección bloqueada, restaurando...');
+                                iframe.src = currentServerUrl;
+                            }
+                        } catch(e) {}
                     }
                     lastIframeSrc = iframe.src;
                 }
             }, 2000);
-
-            // Prevenir que el iframe navegue la página principal
-            window.addEventListener('beforeunload', function(e) {
-                if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
-                    e.preventDefault();
-                    return '¿Salir del stream?';
-                }
-            });
         })();
 
         currentServerName = servers[0].server;
