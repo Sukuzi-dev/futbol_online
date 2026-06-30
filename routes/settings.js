@@ -65,19 +65,27 @@ router.get('/', async (req, res) => {
 // Subir avatar
 router.post('/avatar', upload.single('avatar'), async (req, res) => {
     try {
+        console.log('📤 Archivo recibido:', req.file); // DEBUG
+        
         if (!req.file) {
             return res.json({ success: false, message: 'No se seleccionó archivo' });
         }
 
-        // La URL de la imagen en R2
-        const avatarUrl = req.file.location; // URL pública de R2
+        // La URL de R2 viene en req.file.location
+        const avatarUrl = req.file.location || req.file.key;
+        console.log('📸 URL de R2:', avatarUrl); // DEBUG
 
-        // Guardar URL en base de datos
-        await pool.query('UPDATE users SET avatar = ? WHERE id = ?', 
-            [avatarUrl, req.session.user.id]);
+        const userId = req.session.user.id;
+
+        // Guardar en BD
+        await pool.query('UPDATE users SET avatar = ? WHERE id = ?', [avatarUrl, userId]);
+        console.log('✅ Avatar guardado en BD para usuario:', userId); // DEBUG
 
         // Actualizar sesión
         req.session.user.avatar = avatarUrl;
+        
+        // Forzar guardar sesión
+        req.session.save();
 
         res.json({ 
             success: true, 
@@ -85,8 +93,8 @@ router.post('/avatar', upload.single('avatar'), async (req, res) => {
             avatar: avatarUrl 
         });
     } catch (error) {
-        console.error('Error:', error);
-        res.json({ success: false, message: 'Error al subir imagen' });
+        console.error('❌ Error:', error);
+        res.json({ success: false, message: 'Error: ' + error.message });
     }
 });
 
