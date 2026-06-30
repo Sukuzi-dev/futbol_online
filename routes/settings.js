@@ -3,34 +3,10 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { pool } = require('../models/db');
 const { checkAuth } = require('../middleware/auth');
-const multer = require('multer');
-const path = require('path');
-const crypto = require('crypto');
-
-// Configuración de multer
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const dir = path.join(__dirname, '../public/uploads/avatars');
-        cb(null, dir);
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = crypto.randomBytes(8).toString('hex');
-        const ext = path.extname(file.originalname);
-        cb(null, 'avatar-' + req.session.user.id + '-' + uniqueSuffix + ext);
-    }
-});
-
-const upload = multer({
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024, files: 1 },
-    fileFilter: function (req, file, cb) {
-        const allowedTypes = /jpeg|jpg|png|gif|webp/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = allowedTypes.test(file.mimetype);
-        if (mimetype && extname) return cb(null, true);
-        cb(new Error('Solo imágenes JPG, PNG, GIF, WebP'));
-    }
-});
+const { upload } = require('../middleware/upload');
+const { r2Client } = require('../config/r2');
+const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const fs = require('fs');
 
 router.use(checkAuth);
 
@@ -62,38 +38,90 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Subir avatar
+// ============================================
+// SUBIR AVATAR (R2 + LOCAL + BASE64 - AUTOMÁTICO)
+// ============================================
 router.post('/avatar', upload.single('avatar'), async (req, res) => {
     try {
-        console.log('📤 Archivo recibido:', req.file); // DEBUG
+        console.log('📤 Archivo recibido:', req.file ? req.file.originalname : 'NINGUNO');
         
         if (!req.file) {
             return res.json({ success: false, message: 'No se seleccionó archivo' });
         }
 
-        // La URL de R2 viene en req.file.location
-        const avatarUrl = req.file.location || req.file.key;
-        console.log('📸 URL de R2:', avatarUrl); // DEBUG
-
         const userId = req.session.user.id;
+        let avatarUrl = null;
 
-        // Guardar en BD
+        // ============================================
+        // DETECTAR DÓNDE SE GUARDÓ LA IMAGEN
+        // ============================================
+        
+        // Caso 1: Se guardó en R2 (req.file.location existe)
+        if (req.file.location && req.file.location.includes('r2.dev')) {
+            avatarUrl = req.file.location;
+            console.log('📸 Avatar en R2:', avatarUrl);
+            
+            // BORRAR AVATAR ANTERIOR DE R2
+            const [users] = await pool.query('SELECT avatar FROM users WHERE id = ?', [userId]);
+            const oldAvatar = users[0].avatar;
+            
+            if (oldAvatar && oldAvatar.includes('r2.dev')) {
+                try {
+                    const urlParts = new URL(oldAvatar);
+                    const oldKey = urlParts.pathname.substring(1);
+                    console.log('🗑️ Borrando avatar anterior de R2:', oldKey);
+                    
+                    await r2Client.send(new DeleteObjectCommand({
+                        Bucket: process.env.R2_BUCKET_NAME || 'futbol-online-uploads',
+                        Key: oldKey
+                    }));
+                    console.log('✅ Avatar anterior borrado de R2');
+                } catch (deleteError) {
+                    console.log('⚠️ No se pudo borrar avatar anterior:', deleteError.message);
+                }
+            }
+        }
+        // Caso 2: Se guardó en disco local (Railway)
+        else if (req.file.path && fs.existsSync(req.file.path)) {
+            console.log('💾 Avatar en disco local, convirtiendo a Base64...');
+            
+            const imageBuffer = fs.readFileSync(req.file.path);
+            avatarUrl = `data:${req.file.mimetype};base64,${imageBuffer.toString('base64')}`;
+            
+            // Eliminar archivo temporal
+            try { fs.unlinkSync(req.file.path); } catch (e) {}
+            
+            console.log('✅ Avatar convertido a Base64');
+        }
+        // Caso 3: Ya viene en Base64 o es una URL
+        else if (req.file.key || req.file.buffer) {
+            avatarUrl = req.file.location || req.file.key;
+            console.log('📸 Avatar desde buffer/key:', avatarUrl);
+        }
+        // Fallback
+        else {
+            avatarUrl = '/uploads/avatars/default.png';
+            console.log('⚠️ Usando avatar por defecto');
+        }
+
+        // ============================================
+        // GUARDAR EN BASE DE DATOS
+        // ============================================
         await pool.query('UPDATE users SET avatar = ? WHERE id = ?', [avatarUrl, userId]);
-        console.log('✅ Avatar guardado en BD para usuario:', userId); // DEBUG
+        console.log('✅ Avatar guardado en BD para usuario:', userId);
 
         // Actualizar sesión
         req.session.user.avatar = avatarUrl;
-        
-        // Forzar guardar sesión
         req.session.save();
 
         res.json({ 
             success: true, 
-            message: 'Avatar actualizado', 
+            message: 'Avatar actualizado correctamente', 
             avatar: avatarUrl 
         });
+
     } catch (error) {
-        console.error('❌ Error:', error);
+        console.error('❌ Error al subir avatar:', error);
         res.json({ success: false, message: 'Error: ' + error.message });
     }
 });
