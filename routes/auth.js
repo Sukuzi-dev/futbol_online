@@ -224,7 +224,7 @@ router.post('/login', checkNotAuth, async (req, res) => {
 // ============================================
 router.get('/verify', checkNotAuth, (req, res) => {
     if (!req.session.tempUserId) {
-        return res.redirect('/login');
+        return res.redirect('/');
     }
     res.render('verify');
 });
@@ -530,12 +530,12 @@ router.get('/logout', async (req, res) => {
         
         req.session.destroy((err) => {
             if (err) console.error('Error al cerrar sesión:', err);
-            res.redirect('/login');
+            res.redirect('/');
         });
         
     } catch (error) {
         console.error('Error en logout:', error);
-        res.redirect('/login');
+        res.redirect('/');
     }
 });
 
