@@ -37,13 +37,11 @@ router.post('/avatar', upload.single('avatar'), async (req, res) => {
             return res.json({ success: false, message: 'No se seleccionó archivo' });
         }
 
-        // Leer archivo y convertir a Base64
         const imageBuffer = fs.readFileSync(req.file.path);
         const base64Image = `data:${req.file.mimetype};base64,${imageBuffer.toString('base64')}`;
-
         const userId = req.session.user.id;
 
-        // Guardar en MySQL
+        // Guardar en BD
         await pool.query('UPDATE users SET avatar = ? WHERE id = ?', [base64Image, userId]);
 
         // Actualizar sesión
@@ -52,7 +50,7 @@ router.post('/avatar', upload.single('avatar'), async (req, res) => {
         // Borrar archivo temporal
         try { fs.unlinkSync(req.file.path); } catch (e) {}
 
-        console.log('✅ Avatar guardado en BD (Base64) para usuario:', userId);
+        console.log('✅ Avatar actualizado para usuario:', userId);
 
         res.json({ 
             success: true, 
