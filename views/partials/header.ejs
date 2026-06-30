@@ -169,7 +169,7 @@
         
         <!-- Usuario -->
         <a href="/settings" class="user-menu">
-            <img src="/uploads/avatars/<%= user ? user.avatar || 'default.png' : 'default.png' %>" 
+            <img src="<%= user.avatar || '/uploads/avatars/default.png' %>" 
                  alt="Avatar" 
                  class="user-avatar-header"
                  onerror="this.src='/uploads/avatars/default.png'">
