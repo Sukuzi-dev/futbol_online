@@ -316,7 +316,7 @@
     
     <% if (user) { %>
     <div class="sidebar-user">
-        <img src="/uploads/avatars/<%= user.avatar || 'default.png' %>" 
+        <img src="<%= user.avatar || '/uploads/avatars/default.png' %>" 
              alt="<%= user.username %>" 
              class="sidebar-avatar"
              onerror="this.src='/uploads/avatars/default.png'">
