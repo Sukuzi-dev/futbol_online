@@ -89,7 +89,7 @@ async function initializeDatabase() {
                 email VARCHAR(255) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
                 role ENUM('user', 'admin', 'owner') DEFAULT 'user',
-                avatar VARCHAR(255) DEFAULT 'default.png',
+                avatar LONGTEXT,
                 verified BOOLEAN DEFAULT FALSE,
                 verification_code VARCHAR(6),
                 verification_expiry DATETIME,
