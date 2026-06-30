@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { height: 100%; width: 100%; overflow: hidden; font-family: 'Poppins', sans-serif; background: #000; color: white; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+        html, body { height: 100%; width: 100%; overflow: hidden; font-family: 'Poppins', sans-serif; background: #000; color: white; -webkit-tap-highlight-color: transparent; }
         body { display: flex; }
         .main-wrapper { flex: 1; display: flex; flex-direction: column; height: 100vh; height: 100dvh; width: 100%; overflow: hidden; }
         
@@ -35,26 +35,15 @@
         .video-container { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; position: relative; min-width: 0; overflow: hidden; }
         .player-wrapper { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: #000; }
         .player-wrapper video { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; }
-        .player-wrapper iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; background: #000; }
+        .player-wrapper iframe { width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; }
         
-        /* CAPA PROTECTORA - Permite pasar clicks a los controles pero no al iframe */
+        /* CAPA PROTECTORA - Bloquea clicks en iframe/video pero deja pasar a controles nativos */
         .click-shield {
             position: absolute; top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 10; background: transparent;
             pointer-events: none;
         }
-        /* Los controles SÍ reciben clicks */
-        .custom-controls { pointer-events: auto; }
-        
-        .custom-controls { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(transparent, rgba(0,0,0,0.95)); padding: 25px 12px 8px; z-index: 20; display: flex; align-items: center; gap: 8px; opacity: 1; transition: opacity 0.3s; min-height: 44px; }
-        .custom-controls.hidden { opacity: 0; pointer-events: none; }
-        .control-btn { background: none; border: none; color: white; cursor: pointer; font-size: 16px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
-        .control-btn:active { color: #667eea; transform: scale(0.9); }
-        .volume-container { display: flex; align-items: center; gap: 2px; }
-        .volume-slider { width: 70px; height: 4px; -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.3); border-radius: 2px; outline: none; cursor: pointer; }
-        .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #667eea; cursor: pointer; }
-        .fullscreen-btn { margin-left: auto; }
         
         .server-change-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 30; flex-direction: column; gap: 12px; }
         .server-change-overlay.active { display: flex; }
@@ -105,7 +94,7 @@
         .servers-overlay.active { display: block; }
         
         @media (max-width: 1024px) { .stream-content { flex-direction: column; } .video-container { height: 45vh; flex: none; min-height: 200px; } .chat-sidebar { width: 100%; flex: 1; min-height: 250px; } .server-selector { display: none; } .mobile-server-btn { display: block; } .chat-input-container { position: sticky; bottom: 0; } }
-        @media (max-width: 768px) { .stream-header { padding: 6px 8px; min-height: 40px; } .video-container { height: 35vh; min-height: 180px; } .custom-controls { padding: 20px 8px 6px; } .control-btn { font-size: 14px; width: 30px; height: 30px; } .volume-slider { width: 50px; } .viewers-badge span:last-child { display: none; } }
+        @media (max-width: 768px) { .stream-header { padding: 6px 8px; min-height: 40px; } .video-container { height: 35vh; min-height: 180px; } .viewers-badge span:last-child { display: none; } }
         @media (max-width: 480px) { .video-container { height: 30vh; min-height: 160px; } .chat-sidebar { min-height: 250px; } .chat-input { font-size: 16px; } .chat-send-btn { width: 36px; height: 36px; } }
     </style>
 </head>
@@ -119,12 +108,8 @@
             <div class="video-container" id="videoContainer">
                 <div class="server-change-overlay active" id="serverChangeOverlay"><div class="server-change-spinner"></div><p class="server-change-text">Cargando transmisión...</p></div>
                 <div class="player-wrapper" id="playerWrapper"></div>
+                <!-- CAPA PROTECTORA - Bloquea clicks -->
                 <div class="click-shield"></div>
-                <div class="custom-controls" id="customControls">
-                    <button class="control-btn" id="playPauseBtn" onclick="togglePlay()"><i class="fas fa-play"></i></button>
-                    <div class="volume-container"><button class="control-btn" id="volumeBtn" onclick="toggleMute()"><i class="fas fa-volume-up"></i></button><input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" oninput="changeVolume(this.value)"></div>
-                    <button class="control-btn fullscreen-btn" onclick="toggleFullscreen()"><i class="fas fa-expand"></i></button>
-                </div>
             </div>
             <div class="chat-sidebar">
                 <div class="chat-header"><h3><i class="fas fa-circle"></i> Chat</h3><span class="chat-server-name" id="chatServerName">Principal</span><span class="chat-online-count" id="chatOnlineCount">0</span></div>
@@ -140,10 +125,9 @@
     <script>
         const streamId = '<%= stream.id %>', userId = '<%= user.id %>', username = '<%= user.username %>', userRole = '<%= user.role %>', userAvatar = '<%= user.avatar %>';
         const socket = io();
-        let hls = null, lastMessageTime = 0, currentVolume = 100, isMuted = false;
+        let hls = null, lastMessageTime = 0;
         const streamUrl = '<%- stream.url %>';
         let currentServerUrl = streamUrl, currentServerName = 'Principal';
-        let currentVideo = null;
 
         const servers = [
             { server: "Servidor Principal", code: streamUrl },
@@ -173,75 +157,9 @@
         }
         populateServerSelectors();
 
-        // ============ CONTROLES UNIVERSALES ============
-        function getVideo() {
-            if (currentVideo && currentVideo.parentNode) return currentVideo;
-            const v = document.getElementById('videoPlayer');
-            if (v) { currentVideo = v; return v; }
-            // Buscar video dentro del iframe
-            const iframe = document.getElementById('streamIframe');
-            if (iframe) {
-                try {
-                    const doc = iframe.contentDocument || iframe.contentWindow.document;
-                    const vid = doc.querySelector('video');
-                    if (vid) { currentVideo = vid; return vid; }
-                } catch(e) {}
-            }
-            return null;
-        }
-
-        function togglePlay() {
-            const v = getVideo();
-            if (!v) return;
-            v.paused ? v.play().catch(() => {}) : v.pause();
-            updatePlayBtn();
-        }
-
-        function toggleMute() {
-            const v = getVideo();
-            if (!v) return;
-            v.muted = !v.muted;
-            updateVolUI();
-        }
-
-        function changeVolume(val) {
-            const v = getVideo();
-            currentVolume = parseInt(val);
-            if (v) { v.volume = currentVolume / 100; v.muted = (currentVolume === 0); }
-            updateVolUI();
-        }
-
-        function updateVolUI() {
-            const v = getVideo();
-            const vol = v ? Math.round(v.volume * 100) : currentVolume;
-            const mut = v ? v.muted : false;
-            document.getElementById('volumeSlider').value = mut ? 0 : vol;
-            const b = document.getElementById('volumeBtn');
-            b.innerHTML = (mut || vol === 0) ? '<i class="fas fa-volume-mute"></i>' : vol < 50 ? '<i class="fas fa-volume-down"></i>' : '<i class="fas fa-volume-up"></i>';
-        }
-
-        function updatePlayBtn() {
-            const v = getVideo();
-            document.getElementById('playPauseBtn').innerHTML = (v && !v.paused) ? '<i class="fas fa-pause"></i>' : '<i class="fas fa-play"></i>';
-        }
-
-        function toggleFullscreen() {
-            const c = document.getElementById('videoContainer');
-            document.fullscreenElement ? document.exitFullscreen() : c.requestFullscreen().catch(() => {});
-        }
-
-        // Auto-ocultar
-        let ht;
-        const vc = document.getElementById('videoContainer');
-        vc.addEventListener('mousemove', () => { const c = document.getElementById('customControls'); c.classList.remove('hidden'); clearTimeout(ht); ht = setTimeout(() => c.classList.add('hidden'), 3000); });
-        vc.addEventListener('touchstart', () => { const c = document.getElementById('customControls'); c.classList.remove('hidden'); clearTimeout(ht); ht = setTimeout(() => c.classList.add('hidden'), 3000); });
-
-        // ============ CARGAR STREAM ============
         function destroyPlayer() {
             if (hls) { hls.stopLoad(); hls.detachMedia(); hls.destroy(); hls = null; }
-            currentVideo = null;
             document.getElementById('playerWrapper').innerHTML = '';
-            updatePlayBtn();
         }
 
         function loadStream(url) {
@@ -250,7 +168,6 @@
             const w = document.getElementById('playerWrapper');
             
             if (url.includes('.php') || url.includes('canal.php') || url.includes('canales.php')) {
-                // Iframe para PHP
                 const iframe = document.createElement('iframe');
                 iframe.id = 'streamIframe';
                 iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
@@ -258,51 +175,23 @@
                 iframe.src = url;
                 iframe.style.cssText = 'width:100%;height:100%;border:none;position:absolute;top:0;left:0;';
                 w.appendChild(iframe);
-                iframe.onload = () => {
-                    document.getElementById('serverChangeOverlay').classList.remove('active');
-                    // Intentar acceder al video dentro del iframe
-                    setTimeout(() => {
-                        const v = getVideo();
-                        if (v) {
-                            v.addEventListener('play', updatePlayBtn);
-                            v.addEventListener('pause', updatePlayBtn);
-                            v.addEventListener('volumechange', updateVolUI);
-                            updatePlayBtn();
-                        }
-                    }, 2000);
-                };
+                iframe.onload = () => document.getElementById('serverChangeOverlay').classList.remove('active');
                 setTimeout(() => document.getElementById('serverChangeOverlay').classList.remove('active'), 6000);
-            } else {
-                // Video nativo para HLS, MP4, M3U8
+            } else if (url.endsWith('.m3u8') || url.includes('m3u8')) {
                 const v = document.createElement('video');
-                v.id = 'videoPlayer';
-                v.controls = false;
-                v.autoplay = true;
-                v.playsInline = true;
+                v.id = 'videoPlayer'; v.controls = true; v.autoplay = true; v.playsInline = true;
                 v.setAttribute('playsinline', '');
-                v.volume = currentVolume / 100;
                 v.style.cssText = 'width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;';
                 w.appendChild(v);
-                currentVideo = v;
-                
-                v.addEventListener('play', updatePlayBtn);
-                v.addEventListener('pause', updatePlayBtn);
-                v.addEventListener('playing', () => { document.getElementById('serverChangeOverlay').classList.remove('active'); updatePlayBtn(); });
-                v.addEventListener('volumechange', updateVolUI);
-                
-                if (url.endsWith('.m3u8') || url.includes('m3u8')) {
-                    if (Hls.isSupported()) {
-                        hls = new Hls({ enableWorker: true, lowLatencyMode: true });
-                        hls.loadSource(url); hls.attachMedia(v);
-                        hls.on(Hls.Events.MANIFEST_PARSED, () => v.play().catch(() => {}));
-                    } else if (v.canPlayType('application/vnd.apple.mpegurl')) {
-                        v.src = url;
-                        v.addEventListener('loadedmetadata', () => v.play());
-                    }
-                } else {
-                    v.src = url;
-                    v.play().catch(() => {});
-                }
+                if (Hls.isSupported()) { hls = new Hls({ enableWorker: true, lowLatencyMode: true }); hls.loadSource(url); hls.attachMedia(v); hls.on(Hls.Events.MANIFEST_PARSED, () => { v.play().catch(() => {}); document.getElementById('serverChangeOverlay').classList.remove('active'); }); }
+                else if (v.canPlayType('application/vnd.apple.mpegurl')) { v.src = url; v.addEventListener('loadedmetadata', () => { v.play(); document.getElementById('serverChangeOverlay').classList.remove('active'); }); }
+            } else {
+                const v = document.createElement('video');
+                v.id = 'videoPlayer'; v.controls = true; v.autoplay = true; v.playsInline = true;
+                v.setAttribute('playsinline', ''); v.src = url;
+                v.style.cssText = 'width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;';
+                w.appendChild(v);
+                v.addEventListener('playing', () => document.getElementById('serverChangeOverlay').classList.remove('active'));
                 setTimeout(() => document.getElementById('serverChangeOverlay').classList.remove('active'), 5000);
             }
         }
