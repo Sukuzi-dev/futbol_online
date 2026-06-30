@@ -88,41 +88,16 @@
         .servers-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 199; }
         .servers-overlay.active { display: block; }
         
-        /* ============ RESPONSIVE ============ */
-        @media (max-width: 1024px) {
-            .stream-content { flex-direction: column; }
-            .video-container { height: 45vh; flex: none; }
-            .chat-sidebar { width: 100%; flex: 1; min-height: 200px; }
-            .server-selector { display: none; }
-            .mobile-server-btn { display: block; }
-            .chat-messages { max-height: none; }
-            .chat-input-container { position: sticky; bottom: 0; }
-        }
-        
-        @media (max-width: 768px) {
-            .stream-header { padding: 6px 10px; }
-            .stream-name-header { font-size: 11px; }
-            .video-container { height: 35vh; }
-            .chat-sidebar { min-height: 250px; }
-            .chat-header { padding: 8px 10px; }
-            .chat-messages { padding: 8px; gap: 6px; }
-            .chat-input { padding: 8px 10px; font-size: 11px; }
-            .chat-send-btn { width: 32px; height: 32px; font-size: 12px; }
-            .viewers-badge span:last-child { display: none; }
-        }
-        
-        @media (max-width: 480px) {
-            .video-container { height: 30vh; }
-            .chat-sidebar { min-height: 300px; }
-            .chat-input { font-size: 16px; } /* Evitar zoom en iOS */
-        }
+        @media (max-width: 1024px) { .stream-content { flex-direction: column; } .video-container { height: 45vh; flex: none; } .chat-sidebar { width: 100%; flex: 1; min-height: 200px; } .server-selector { display: none; } .mobile-server-btn { display: block; } .chat-input-container { position: sticky; bottom: 0; } }
+        @media (max-width: 768px) { .stream-header { padding: 6px 10px; } .stream-name-header { font-size: 11px; } .video-container { height: 35vh; } .chat-sidebar { min-height: 250px; } .chat-header { padding: 8px 10px; } .chat-messages { padding: 8px; gap: 6px; } .chat-input { padding: 8px 10px; font-size: 11px; } .chat-send-btn { width: 32px; height: 32px; font-size: 12px; } .viewers-badge span:last-child { display: none; } }
+        @media (max-width: 480px) { .video-container { height: 30vh; } .chat-sidebar { min-height: 300px; } .chat-input { font-size: 16px; } }
     </style>
 </head>
 <body>
     <div class="main-wrapper">
         <header class="stream-header">
             <div class="stream-header-left">
-                <a href="/dashboard" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+                <a href="/dashboard" class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i></a>
                 <div class="live-badge"><span class="live-dot"></span> DIRECTO</div>
                 <span class="stream-name-header"><%= stream.name %></span>
                 <div class="server-selector" id="desktopServerSelector">
@@ -146,7 +121,7 @@
                     <video id="videoPlayer" class="video-js vjs-default-skin vjs-big-play-centered" controls autoplay playsinline preload="auto"></video>
                 </div>
                 <div class="iframe-container" id="iframeContainer">
-                    <iframe id="streamIframe" src="" allowfullscreen="true" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" referrerpolicy="no-referrer"></iframe>
+                    <iframe id="streamIframe" src="" allowfullscreen="true" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-presentation allow-autoplay"></iframe>
                 </div>
             </div>
             
@@ -247,8 +222,11 @@
             if (url.includes('.php') || url.includes('canal.php') || url.includes('canales.php')) {
                 document.getElementById('videoJSContainer').style.display = 'none';
                 document.getElementById('iframeContainer').style.display = 'block';
-                document.getElementById('streamIframe').src = url;
-                document.getElementById('streamIframe').onload = () => document.getElementById('serverChangeOverlay').classList.remove('active');
+                
+                const iframe = document.getElementById('streamIframe');
+                iframe.src = url;
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-autoplay');
+                iframe.onload = () => document.getElementById('serverChangeOverlay').classList.remove('active');
                 setTimeout(() => document.getElementById('serverChangeOverlay').classList.remove('active'), 5000);
             } else if (url.endsWith('.m3u8') || url.includes('m3u8')) {
                 initHLS(url);
@@ -262,6 +240,10 @@
             v.classList.remove('video-js', 'vjs-default-skin', 'vjs-big-play-centered');
             v.controls = true; v.autoplay = true; v.playsInline = true;
             v.style.width = '100%'; v.style.height = '100%';
+            v.setAttribute('controlsList', 'nodownload nofullscreen noremoteplayback');
+            v.setAttribute('disablePictureInPicture', 'true');
+            v.addEventListener('contextmenu', e => e.preventDefault());
+            
             if (Hls.isSupported()) {
                 hls = new Hls({ enableWorker: true, lowLatencyMode: true });
                 hls.loadSource(url); hls.attachMedia(v);
@@ -364,6 +346,48 @@
         function openServersPanel() { document.getElementById('serversPanel').classList.add('active'); document.getElementById('serversOverlay').classList.add('active'); }
         function closeServersPanel() { document.getElementById('serversPanel').classList.remove('active'); document.getElementById('serversOverlay').classList.remove('active'); }
         function esc(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        
+        // ============ PROTECCIÓN CONTRA REDIRECCIÓN ============
+        (function() {
+            // Bloquear popups
+            window.open = function() { console.log('🚫 Popup bloqueado'); return null; };
+            
+            // Bloquear clicks en links externos
+            document.addEventListener('click', function(e) {
+                let target = e.target;
+                while (target && target !== document.body) {
+                    if (target.tagName === 'A' && target.href && !target.href.includes(window.location.host) && target.id !== 'backBtn') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                    target = target.parentElement;
+                }
+            }, true);
+            
+            // Bloquear Ctrl+Click
+            document.addEventListener('auxclick', function(e) { e.preventDefault(); });
+            
+            // Bloquear Ctrl+T, Ctrl+N, Ctrl+W
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && (e.key === 't' || e.key === 'n' || e.key === 'w')) {
+                    e.preventDefault();
+                }
+            });
+            
+            // Verificar iframe periódicamente
+            setInterval(function() {
+                const iframe = document.getElementById('streamIframe');
+                if (iframe && iframe.src && iframe.src !== '' && iframe.src !== 'about:blank' && iframe.src !== currentServerUrl) {
+                    const allowedUrls = servers.map(s => s.code);
+                    const isAllowed = allowedUrls.some(url => iframe.src.startsWith(url));
+                    if (!isAllowed) {
+                        console.log('🚫 Redirección bloqueada');
+                        iframe.src = currentServerUrl;
+                    }
+                }
+            }, 2000);
+        })();
         
         // Iniciar
         currentServerName = servers[0].server;
