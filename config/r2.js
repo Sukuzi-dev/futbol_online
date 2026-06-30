@@ -1,6 +1,4 @@
 const { S3Client } = require('@aws-sdk/client-s3');
-const https = require('https');
-const http = require('http');
 
 const r2Client = new S3Client({
     region: 'auto',
@@ -10,12 +8,9 @@ const r2Client = new S3Client({
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY
     },
     forcePathStyle: true,
-    requestHandler: {
-        httpsAgent: new https.Agent({
-            rejectUnauthorized: false,
-            keepAlive: true
-        })
-    }
+    tls: true,
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED'
 });
 
 module.exports = { r2Client };
