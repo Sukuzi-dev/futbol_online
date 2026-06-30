@@ -10,7 +10,7 @@ const checkAuth = async (req, res, next) => {
                     redirect: '/login'
                 });
             }
-            return res.redirect('/login?error=session_expired');
+            return res.redirect('/?error=session_expired');
         }
 
         // Verificar que el usuario existe
@@ -21,7 +21,7 @@ const checkAuth = async (req, res, next) => {
 
         if (users.length === 0) {
             req.session.destroy();
-            return res.redirect('/login?error=user_not_found');
+            return res.redirect('/?error=session_expired');
         }
 
         const user = users[0];
