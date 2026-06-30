@@ -97,8 +97,13 @@ app.use('/stream', require('./routes/stream'));
 app.use('/settings', require('./routes/settings'));
 app.use('/notifications', require('./routes/notifications'));
 
+// Ruta principal - Login como índice
 app.get('/', (req, res) => {
-    res.redirect(req.session && req.session.user ? '/dashboard' : '/login');
+    if (req.session && req.session.user) {
+        return res.redirect('/dashboard');
+    }
+    // Renderizar directamente el login sin redirigir
+    res.render('login', { error: req.query.error || null });
 });
 
 // ============================================
